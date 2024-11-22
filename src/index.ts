@@ -5,13 +5,12 @@ import {
 } from '@jupyterlab/application';
 
 import { ILauncher } from '@jupyterlab/launcher';
-import {
-  IFileBrowserFactory
-  // IDefaultFileBrowser
-} from '@jupyterlab/filebrowser';
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
 
 import { WidgetTracker } from '@jupyterlab/apputils';
 import { CPWDocumentWidget, CPWFactory } from './widget';
+
+import { INotebookCellExecutor } from '@jupyterlab/notebook';
 
 import Icon from '../style/icons/logo.svg';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -26,9 +25,13 @@ function activate(
   app: JupyterFrontEnd,
   launcher: ILauncher,
   restorer: ILayoutRestorer,
+  executor: INotebookCellExecutor,
   browserFactory: IFileBrowserFactory
   // menu: IMainMenu
 ) {
+  // const n = new Notebook({''});
+  // setCellExecutor(executor);
+  // console.log(executor);
   // console.log(app.serviceManager.user);
   const tracker = new WidgetTracker<CPWDocumentWidget>({
     namespace: 'cpw'
@@ -105,7 +108,12 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Enable Canvas Pipeline Workflow.',
   autoStart: true,
   // optional: [],
-  requires: [ILauncher, ILayoutRestorer, IFileBrowserFactory /* , IMainMenu */],
+  requires: [
+    ILauncher,
+    ILayoutRestorer,
+    INotebookCellExecutor,
+    IFileBrowserFactory /* , IMainMenu */
+  ],
   activate
 };
 

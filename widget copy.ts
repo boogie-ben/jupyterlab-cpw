@@ -20,48 +20,24 @@ class CPWWidget extends Widget {
     this._serviceManager = options.serviceManager;
     this._browserFactory = options.browserFactory;
     this._context = options.context;
-    const div = document.createElement('div');
-    const btn = document.createElement('button');
-    btn.innerText = 'run';
-
-    btn.onclick = () => {
-      this.run();
-    };
-
-    div.appendChild(btn);
-
-    // const content = this._context.model.toString() || '';
-
-    // div.innerText = content;
-
-    this.div = div;
-    this.node.appendChild(this.div);
-
-    this._context.ready.then(() => {
-      const content = this._context.model.toString();
-      if (!content) {
-        this._context.model.fromString(
-          '{ "cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5 }'
-        );
-        this._commands.execute('docmanager:save');
-      }
-      const p = document.createElement('p');
-      p.innerText = this._context.model.toString();
-      this.div.appendChild(p);
-    });
-
-    // this._context.ready.then(() => {
-    //   const content = this._context.model.toString() || '';
-    //   this.div.innerText = content;
-    //   this._commands.execute('notebook:run-all-cells');
-    // });
-    // console.log(this._context.model);
     // this.filePath = this._context.localPath;
 
     // // 移动文件目录、改文件名
     // this._context.pathChanged.connect(() => {
     //   this.filePath = this._context.localPath;
     // }, this);
+
+    const iframe = document.createElement('iframe');
+
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+
+    this.addClass('jp-canvas-pipeline-workflow-content');
+    this.iframe = iframe;
+    this.node.appendChild(this.iframe);
+
+    this._context.ready.then(() => this.init());
 
     // window.addEventListener('message', this)
 
@@ -70,59 +46,33 @@ class CPWWidget extends Widget {
     // }, 3000);
   }
 
-  run() {
-    let content: Record<string, any> = {};
-    try {
-      content = JSON.parse(this._context.model.toString());
-    } catch {
-      ('');
-    }
-    if (!content) {
-      window.alert('ipynb错误');
+  init() {
+    const src = new URL('http://127.0.0.1:5500/iframe.html');
+    src.searchParams.set('id', this.id);
+    this.iframe.src = src.href;
+    window.addEventListener('message', this);
+  }
+
+  // iframe message 事件
+  handleEvent(e: MessageEvent): void {
+    const { id, msg, source, value } = e.data;
+    if (source !== 'cpw:msg' || id !== this.id) {
       return;
     }
 
-    const cells = content.cells.map((cell: any) => {
-      const { cell_type, execution_count, id, metadata, source } = cell;
-      // {
-      //   cell_type: 'code',
-      //   execution_count: null,
-      //   id: '74fb2c5a-90eb-4726-8753-90a85f32537e',
-      //   metadata: {},
-      //   outputs: [],
-      //   source: ['import time\n', 'time.sleep(5)']
-      // }
-      return {
-        cell_type,
-        execution_count,
-        id,
-        metadata,
-        outputs: [],
-        source,
-        cpw_id: id
-      };
-    });
+    const actions: Record<string, any> = {
+      save: () => this._commands.execute('docmanager:save'),
+      change: () => this._context.model.fromString(value || ''),
+      'command-palette': () =>
+        this._commands.execute('apputils:activate-command-palette')
+    };
 
-    this._commands.execute('notebook:create-new').then(widget => {
-      // console.log(widget);
-      widget.context.ready.then(() => {
-        widget.context.model.fromString(
-          JSON.stringify({
-            cells,
-            metadata: {},
-            nbformat: 4,
-            nbformat_minor: 5
-          })
-        );
-      });
-      // widget.context.model.fromJson({ cells });
-    });
+    actions[msg as string]?.();
   }
 
   // apputils:activate-command-palette
 
   eventHandler() {
-    console.log(this._context);
     console.log(this._commands);
     console.log(this._serviceManager);
     console.log(this._browserFactory);
@@ -133,20 +83,19 @@ class CPWWidget extends Widget {
   //   const a = this._browserFactory.createFileBrowser(this.id);
   //   console.log(a);
   // }
-  // dispose() {
-  //   // this.iframe.removeEventListener('load');
-  //   window.removeEventListener('message', this);
-  //   console.log('dispose');
-  //   super.dispose();
-  // }
+  dispose() {
+    // this.iframe.removeEventListener('load');
+    window.removeEventListener('message', this);
+    console.log('dispose');
+    super.dispose();
+  }
 
   // protected filePath: string;
   // private setFilePath() {
   //   this.filePath = this._context.localPath;
   // }
 
-  readonly div: HTMLDivElement;
-  // readonly iframe: HTMLIFrameElement;
+  readonly iframe: HTMLIFrameElement;
   private _commands: CommandRegistry;
   private _serviceManager: ServiceManager.IManager;
   private _browserFactory: IFileBrowserFactory;
