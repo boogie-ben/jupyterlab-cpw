@@ -8,14 +8,6 @@ import {
   DocumentWidget
 } from '@jupyterlab/docregistry';
 
-import {
-  KernelManager
-  // Session,
-  // SessionAPI,
-  // ContentsManager,
-  // SessionManager
-} from '@jupyterlab/services';
-
 const ipynbJSONTpl = {
   cells: [],
   metadata: {},
@@ -23,15 +15,7 @@ const ipynbJSONTpl = {
   nbformat_minor: 5
 };
 
-// const CPW_RUNNING_DIR = 'cpw-running';
-
 class CPWWidget extends Widget {
-  readonly div: HTMLDivElement;
-  private _commands: CommandRegistry;
-  private _serviceManager: ServiceManager.IManager;
-  private _browserFactory: IFileBrowserFactory;
-  private _context: DocumentRegistry.Context;
-
   constructor(options: {
     commands: CommandRegistry;
     serviceManager: ServiceManager.IManager;
@@ -52,6 +36,11 @@ class CPWWidget extends Widget {
     };
 
     div.appendChild(btn);
+
+    // const content = this._context.model.toString() || '';
+
+    // div.innerText = content;
+
     this.div = div;
     this.node.appendChild(this.div);
 
@@ -61,14 +50,32 @@ class CPWWidget extends Widget {
         this._context.model.fromString(JSON.stringify(ipynbJSONTpl));
         this._commands.execute('docmanager:save');
       }
-      console.log(this);
       const p = document.createElement('p');
       p.innerText = this._context.model.toString();
       this.div.appendChild(p);
     });
+
+    // this._context.ready.then(() => {
+    //   const content = this._context.model.toString() || '';
+    //   this.div.innerText = content;
+    //   this._commands.execute('notebook:run-all-cells');
+    // });
+    // console.log(this._context.model);
+    // this.filePath = this._context.localPath;
+
+    // // 移动文件目录、改文件名
+    // this._context.pathChanged.connect(() => {
+    //   this.filePath = this._context.localPath;
+    // }, this);
+
+    // window.addEventListener('message', this)
+
+    // setTimeout(() => {
+    //   this._context.model.fromString('sdfgfvgver');
+    // }, 3000);
   }
 
-  async run() {
+  run() {
     let content: Record<string, any> = {};
     try {
       content = JSON.parse(this._context.model.toString());
@@ -80,45 +87,46 @@ class CPWWidget extends Widget {
       return;
     }
 
-    const kernelManager = new KernelManager();
-    const kernel = await kernelManager.startNew({ name: 'python' });
-
-    const len = content.cells.length;
-    for (let i = 0; i < len; i++) {
-      const { id, source } = content.cells[i];
-      const future = kernel.requestExecute({ code: source.join('\n') });
-      let outputs = '';
-      let count: null | number = null;
-      future.onIOPub = msg => {
-        console.log(id, msg);
-        const content = msg.content as any;
-        switch (msg.header.msg_type) {
-          case 'execute_input':
-            count = content.execution_count;
-            break;
-          case 'stream':
-            outputs = content.text;
-        }
+    const cells = content.cells.map((cell: any) => {
+      const { cell_type, execution_count, id, metadata, source } = cell;
+      // {
+      //   cell_type: 'code',
+      //   execution_count: null,
+      //   id: '74fb2c5a-90eb-4726-8753-90a85f32537e',
+      //   metadata: {},
+      //   outputs: [],
+      //   source: ['import time\n', 'time.sleep(5)']
+      // }
+      return {
+        cell_type,
+        execution_count,
+        id,
+        metadata,
+        outputs: [],
+        source,
+        cpw_id: id
       };
-      await future.done;
-      this.updateCellOutput(id, outputs, count);
-      future.dispose();
-    }
+    });
 
-    console.log('done');
-
-    kernel.dispose();
-    kernelManager.dispose();
+    this._commands
+      .execute('notebook:create-new', { kernelName: 'python3' })
+      .then(widget => {
+        // console.log(widget);
+        widget.context.ready.then(() => {
+          widget.context.model.fromString(
+            JSON.stringify({
+              cells,
+              metadata: {},
+              nbformat: 4,
+              nbformat_minor: 5
+            })
+          );
+        });
+        // widget.context.model.fromJson({ cells });
+      });
   }
 
-  updateCellOutput(cellId: string, outputs: string, count: number | null) {
-    const content = JSON.parse(this._context.model.toString());
-    const cell = content.cells.find((cell: any) => cell.id === cellId);
-    cell.outputs = outputs.split('\n').filter(Boolean);
-    cell.execution_count = count || null;
-    this._context.model.fromString(JSON.stringify(content));
-    this.div.querySelector('p')!.innerText = this._context.model.toString();
-  }
+  // apputils:activate-command-palette
 
   eventHandler() {
     console.log(this._context);
@@ -126,6 +134,30 @@ class CPWWidget extends Widget {
     console.log(this._serviceManager);
     console.log(this._browserFactory);
   }
+
+  // protected onAfterAttach(msg: Message): void {
+  //   console.log(2, this._context);
+  //   const a = this._browserFactory.createFileBrowser(this.id);
+  //   console.log(a);
+  // }
+  // dispose() {
+  //   // this.iframe.removeEventListener('load');
+  //   window.removeEventListener('message', this);
+  //   console.log('dispose');
+  //   super.dispose();
+  // }
+
+  // protected filePath: string;
+  // private setFilePath() {
+  //   this.filePath = this._context.localPath;
+  // }
+
+  readonly div: HTMLDivElement;
+  // readonly iframe: HTMLIFrameElement;
+  private _commands: CommandRegistry;
+  private _serviceManager: ServiceManager.IManager;
+  private _browserFactory: IFileBrowserFactory;
+  private _context: DocumentRegistry.Context;
 }
 
 export class CPWDocumentWidget extends DocumentWidget<CPWWidget> {
@@ -149,6 +181,9 @@ export class CPWFactory extends ABCWidgetFactory<
   CPWDocumentWidget,
   DocumentRegistry.IModel
 > {
+  /**
+   * Create a new widget given a context.
+   */
   constructor(options: CPWFactory.ICPWFactoryOptions) {
     super(options);
     this._commands = options.commands;
