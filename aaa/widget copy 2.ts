@@ -10,7 +10,6 @@ import {
 import * as nbformat from '@jupyterlab/nbformat';
 // import { MathJaxTypesetter } from '@jupyterlab/mathjax-extension';
 // import { createMarkdownParser } from '@jupyterlab/markedparser-extension';
-import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
 
 import {
   KernelManager,
@@ -26,15 +25,10 @@ import {
   RenderMimeRegistry
 } from '@jupyterlab/rendermime';
 
-const rendermime = new RenderMimeRegistry({ initialFactories });
-
-// const outputArea = new OutputArea({ model, rendermime });
 // const CPW_RUNNING_DIR = 'cpw-running';
 const ren = (cells: any[]) => {
   const warp = document.createElement('div');
-  warp.style.width = '100%';
-  warp.style.height = '100%';
-  warp.style.overflowY = 'auto';
+  warp.setAttribute('id', 'cpw-warp');
   cells.forEach(cell => {
     const node = document.createElement('div');
     node.style.backgroundColor = '#222';
@@ -43,7 +37,6 @@ const ren = (cells: any[]) => {
     const output = document.createElement('div');
     source.innerText = cell.source.join('');
     output.innerText = JSON.stringify(cell.outputs);
-    output.setAttribute('id', cell.id);
     node.appendChild(source);
     node.appendChild(document.createElement('hr'));
     node.appendChild(output);
@@ -60,7 +53,7 @@ class CPWWidget extends Widget {
   private _context: DocumentRegistry.Context;
   private kernelManager = new KernelManager();
   private kernel: Kernel.IKernelConnection | undefined;
-  // private rendermine = new RenderMimeRegistry({ initialFactories });
+  private rendermine = new RenderMimeRegistry({ initialFactories });
   // private grahp: { cells: any[] };
 
   // get cells() {
@@ -74,17 +67,14 @@ class CPWWidget extends Widget {
     context: DocumentRegistry.Context;
   }) {
     super();
-    // todo 刷新重连，不新建kernel
     this.kernelManager.startNew({ name: 'python' }).then(kernel => {
       this.kernel = kernel;
-      // console.log(this._serviceManager);
-      // console.log(kernel);
-      // console.log(this.kernelManager, kernel);
     });
     this._commands = options.commands;
     this._serviceManager = options.serviceManager;
     this._browserFactory = options.browserFactory;
     this._context = options.context;
+
     const div = document.createElement('div');
     const btn = document.createElement('button');
     btn.innerText = 'run';
@@ -95,7 +85,6 @@ class CPWWidget extends Widget {
 
     this.div = div;
     this.node.appendChild(btn);
-    this.node.style.overflow = 'auto';
 
     this._context.ready.then(() => {
       const content = this._context.model.toString();
@@ -134,45 +123,27 @@ class CPWWidget extends Widget {
     for (let i = 0; i < len; i++) {
       // todo 中断内核时打断循环
       const { id, source } = content.cells[i];
-      // const future = this.kernel.requestExecute({ code: source.join('\n') });
+      const future = this.kernel.requestExecute({ code: source.join('\n') });
 
-      const outputArea = new OutputArea({
-        model: new OutputAreaModel(),
-        rendermime
-      });
+      const outputs: nbformat.IOutput[] = [];
 
-      outputArea.future = this.kernel.requestExecute({
-        code: source.join('\n')
-      });
+      future.onIOPub = msg => {
+        console.log(id, msg);
+        const msgType = msg.header.msg_type;
+        switch (msg.header.msg_type) {
+          // todo 消息类型update_display_data
+          case 'execute_result':
+          case 'display_data':
+          case 'stream':
+          case 'error':
+            outputs.push({ ...msg.content, output_type: msgType });
+            break;
+        }
+      };
 
-      await outputArea.future.done;
-      // console.log(id, outputArea);
-      const outputNode = document.getElementById(id)!;
-      outputNode.textContent = '';
-      outputNode.appendChild(outputArea.node);
-      // const cellNode = outputNode.parentNode!;
-      // outputNode.remove();
-      // cellNode!.appendChild(outputArea.node);
-
-      // const outputs: nbformat.IOutput[] = [];
-
-      // future.onIOPub = msg => {
-      //   console.log(id, msg);
-      //   const msgType = msg.header.msg_type;
-      //   switch (msg.header.msg_type) {
-      //     // todo 消息类型update_display_data
-      //     case 'execute_result':
-      //     case 'display_data':
-      //     case 'stream':
-      //     case 'error':
-      //       outputs.push({ ...msg.content, output_type: msgType });
-      //       break;
-      //   }
-      // };
-
-      // await future.done;
-      // this.updateCellOutput(id, outputs);
-      // future.dispose();
+      await future.done;
+      this.updateCellOutput(id, outputs);
+      future.dispose();
     }
 
     console.log('done');
