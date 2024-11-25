@@ -12,14 +12,14 @@ import * as nbformat from '@jupyterlab/nbformat';
 // import { createMarkdownParser } from '@jupyterlab/markedparser-extension';
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
 
-import {
-  KernelManager,
-  Kernel
-  // Session,
-  // SessionAPI,
-  // ContentsManager,
-  // SessionManager
-} from '@jupyterlab/services';
+// import {
+//   // KernelManager,
+//   Kernel,
+//   Session
+//   // SessionAPI,
+//   // ContentsManager,
+//   // SessionManager
+// } from '@jupyterlab/services';
 
 import {
   standardRendererFactories as initialFactories,
@@ -58,14 +58,22 @@ class CPWWidget extends Widget {
   private _serviceManager: ServiceManager.IManager;
   private _browserFactory: IFileBrowserFactory;
   private _context: DocumentRegistry.Context;
-  private kernelManager = new KernelManager();
-  private kernel: Kernel.IKernelConnection | undefined;
+  // private kernelManager = new KernelManager();
+  // private kernel: Kernel.IKernelConnection | undefined;
   // private rendermine = new RenderMimeRegistry({ initialFactories });
   // private grahp: { cells: any[] };
 
   // get cells() {
   //   return this.grahp.cells.filter(cell => cell.shape === 'cpw-shape');
   // }
+
+  // get kernelManager() {
+  //   return this._serviceManager.kernels;
+  // }
+
+  get sessionContext() {
+    return this._context.sessionContext;
+  }
 
   constructor(options: {
     commands: CommandRegistry;
@@ -74,17 +82,11 @@ class CPWWidget extends Widget {
     context: DocumentRegistry.Context;
   }) {
     super();
-    // todo 刷新重连，不新建kernel
-    this.kernelManager.startNew({ name: 'python' }).then(kernel => {
-      this.kernel = kernel;
-      // console.log(this._serviceManager);
-      // console.log(kernel);
-      // console.log(this.kernelManager, kernel);
-    });
     this._commands = options.commands;
     this._serviceManager = options.serviceManager;
     this._browserFactory = options.browserFactory;
     this._context = options.context;
+
     const div = document.createElement('div');
     const btn = document.createElement('button');
     btn.innerText = 'run';
@@ -97,35 +99,47 @@ class CPWWidget extends Widget {
     this.node.appendChild(btn);
     this.node.style.overflow = 'auto';
 
-    this._context.ready.then(() => {
+    // this._context.pathChanged.connect(() => {
+    //   this.filePath = this._context.path;
+    // }, this);
+
+    this._context.ready.then(async () => {
       const content = this._context.model.toString();
       if (!content) {
         this._context.model.fromString(JSON.stringify({ cells: [] })); // 画布对象
         this._commands.execute('docmanager:save');
       }
       console.log(this);
-      // const p = document.createElement('p');
-      // p.innerText = this._context.model.toString();
       const { cells } = JSON.parse(this._context.model.toString());
       this.div.appendChild(ren(cells));
       this.node.appendChild(this.div);
+
+      // const exSession = await this.sessionContext.sessionManager.findByPath(
+      //   this.sessionContext.path
+      // );
+
+      // if (exSession) {
+      //   console.log(111, exSession);
+      //   // this.sessionContext.sessionManager.connectTo({ model: exSession });
+      //   this.sessionContext.sessionManager.connectTo({ model: exSession });
+      // } else {
+      //   console.log(222, exSession);
+      // todo 直接每次都startNew就行，在后面流水线每次执行都开启一个session，完毕后消除
+      this.sessionContext.sessionManager.startNew({
+        kernel: { name: 'python' },
+        name: this.sessionContext.name,
+        path: this.sessionContext.path,
+        type: 'notebook'
+      });
+      // }
     });
   }
 
   async run() {
-    if (this.kernel?.status !== 'idle') {
+    if (this.sessionContext.session?.kernel?.status !== 'idle') {
+      // todo 提醒dialog
       return;
     }
-    // let content: Record<string, any> = {};
-    // try {
-    //   content = JSON.parse(this._context.model.toString());
-    // } catch {
-    //   ('');
-    // }
-    // if (!content) {
-    //   window.alert('ipynb错误');
-    //   return;
-    // }
 
     // todo更改为参数传入
     const content = JSON.parse(this._context.model.toString());
@@ -134,45 +148,20 @@ class CPWWidget extends Widget {
     for (let i = 0; i < len; i++) {
       // todo 中断内核时打断循环
       const { id, source } = content.cells[i];
-      // const future = this.kernel.requestExecute({ code: source.join('\n') });
 
       const outputArea = new OutputArea({
         model: new OutputAreaModel(),
         rendermime
       });
 
-      outputArea.future = this.kernel.requestExecute({
+      outputArea.future = this.sessionContext.session.kernel.requestExecute({
         code: source.join('\n')
       });
 
       await outputArea.future.done;
-      // console.log(id, outputArea);
       const outputNode = document.getElementById(id)!;
       outputNode.textContent = '';
       outputNode.appendChild(outputArea.node);
-      // const cellNode = outputNode.parentNode!;
-      // outputNode.remove();
-      // cellNode!.appendChild(outputArea.node);
-
-      // const outputs: nbformat.IOutput[] = [];
-
-      // future.onIOPub = msg => {
-      //   console.log(id, msg);
-      //   const msgType = msg.header.msg_type;
-      //   switch (msg.header.msg_type) {
-      //     // todo 消息类型update_display_data
-      //     case 'execute_result':
-      //     case 'display_data':
-      //     case 'stream':
-      //     case 'error':
-      //       outputs.push({ ...msg.content, output_type: msgType });
-      //       break;
-      //   }
-      // };
-
-      // await future.done;
-      // this.updateCellOutput(id, outputs);
-      // future.dispose();
     }
 
     console.log('done');
@@ -193,21 +182,22 @@ class CPWWidget extends Widget {
     console.log(this._commands);
     console.log(this._serviceManager);
     console.log(this._browserFactory);
+    // console.log(this.sessionConnection);
   }
 
-  kernelResert() {
-    this.kernel?.restart();
-  }
+  // kernelResert() {
+  //   this.kernel?.restart();
+  // }
 
-  kernelInterrupt() {
-    this.kernel?.interrupt();
-  }
+  // kernelInterrupt() {
+  //   this.kernel?.interrupt();
+  // }
 
-  dispose() {
-    this.kernel?.dispose();
-    this.kernelManager.dispose();
-    super.dispose();
-  }
+  // dispose() {
+  // this.kernel?.dispose();
+  // this.kernelManager.dispose();
+  //   super.dispose();
+  // }
 }
 
 export class CPWDocumentWidget extends DocumentWidget<CPWWidget> {

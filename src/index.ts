@@ -42,6 +42,8 @@ function activate(
     name: widget => widget.context.path
   });
 
+  console.log(app);
+
   const factory = new CPWFactory({
     name: FACTORY,
     fileTypes: ['cpw'],
