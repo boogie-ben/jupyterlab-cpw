@@ -1,32 +1,32 @@
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin,
-  ILayoutRestorer
-} from '@jupyterlab/application';
+  type JupyterFrontEndPlugin,
+  ILayoutRestorer,
+} from '@jupyterlab/application'
 
-import { ILauncher } from '@jupyterlab/launcher';
-import { IFileBrowserFactory } from '@jupyterlab/filebrowser';
+import { ILauncher } from '@jupyterlab/launcher'
+import { IFileBrowserFactory } from '@jupyterlab/filebrowser'
 
-import { WidgetTracker } from '@jupyterlab/apputils';
-import { CPWDocumentWidget, CPWFactory } from './widget';
+import { WidgetTracker } from '@jupyterlab/apputils'
+import { CPWDocumentWidget, CPWFactory } from './widget'
 
-import { INotebookCellExecutor } from '@jupyterlab/notebook';
+import { INotebookCellExecutor } from '@jupyterlab/notebook'
 
-import Icon from '../style/icons/logo.svg';
-import { LabIcon } from '@jupyterlab/ui-components';
+import Icon from '../style/icons/logo.svg'
+import { LabIcon } from '@jupyterlab/ui-components'
 
-const cpwIcon = new LabIcon({ name: 'cpw:icon', svgstr: Icon });
+const cpwIcon = new LabIcon({ name: 'cpw:icon', svgstr: Icon })
 
-const COMMAND = 'cpw:new';
+const COMMAND = 'cpw:new'
 
-const FACTORY = 'CPW';
+const FACTORY = 'CPW'
 
-function activate(
+function activate (
   app: JupyterFrontEnd,
   launcher: ILauncher,
   restorer: ILayoutRestorer,
   executor: INotebookCellExecutor,
-  browserFactory: IFileBrowserFactory
+  browserFactory: IFileBrowserFactory,
   // menu: IMainMenu
 ) {
   // const n = new Notebook({''});
@@ -34,15 +34,15 @@ function activate(
   // console.log(executor);
   // console.log(app.serviceManager.user);
   const tracker = new WidgetTracker<CPWDocumentWidget>({
-    namespace: 'cpw'
-  });
+    namespace: 'cpw',
+  })
   restorer.restore(tracker, {
     command: 'docmanager:open',
     args: widget => ({ path: widget.context.path, factory: FACTORY }),
-    name: widget => widget.context.path
-  });
+    name: widget => widget.context.path,
+  })
 
-  console.log(app);
+  console.log(app)
 
   const factory = new CPWFactory({
     name: FACTORY,
@@ -55,18 +55,18 @@ function activate(
     canStartKernel: true,
     // shutdownOnClose: true,
     shutdownOnClose: false,
-    preferKernel: true
-  });
+    preferKernel: true,
+  })
 
   factory.widgetCreated.connect((sender, widget) => {
-    widget.title.icon = cpwIcon;
+    widget.title.icon = cpwIcon
     widget.context.pathChanged.connect(() => {
-      tracker.save(widget);
-    });
-    tracker.add(widget);
-  });
+      tracker.save(widget)
+    })
+    tracker.add(widget)
+  })
 
-  app.docRegistry.addWidgetFactory(factory);
+  app.docRegistry.addWidgetFactory(factory)
 
   app.docRegistry.addFileType({
     name: 'cpw',
@@ -76,8 +76,8 @@ function activate(
     // iconClass: 'jp-MaterialIcon jp-ImageIcon',
     icon: cpwIcon,
     fileFormat: 'text',
-    contentType: 'file'
-  });
+    contentType: 'file',
+  })
 
   // 从launcher新建cpw文件
   app.commands.addCommand(COMMAND, {
@@ -89,22 +89,22 @@ function activate(
         .execute('docmanager:new-untitled', {
           path: args.cwd,
           type: 'file',
-          ext: '.cpw'
+          ext: '.cpw',
         })
         .then(model => {
           app.commands.execute('docmanager:open', {
             path: model.path,
-            factory: FACTORY
-          });
-        });
-    }
-  });
+            factory: FACTORY,
+          })
+        })
+    },
+  })
 
   launcher.add({
     command: COMMAND,
     category: 'Workflow',
-    rank: 0
-  });
+    rank: 0,
+  })
 }
 
 /**
@@ -119,9 +119,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
     ILauncher,
     ILayoutRestorer,
     INotebookCellExecutor,
-    IFileBrowserFactory /* , IMainMenu */
+    IFileBrowserFactory, /* , IMainMenu */
   ],
-  activate
-};
+  activate,
+}
 
-export default plugin;
+export default plugin

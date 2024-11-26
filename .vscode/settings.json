@@ -1,0 +1,13 @@
+{
+  "extensions.ignoreRecommendations": false,
+  // "i18n-ally.localesPaths": ["src/locales"],
+
+  "eslint.alwaysShowStatus": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "i18n-ally.localesPaths": [
+    "src/locales"
+  ],
+  "typescript.tsdk": "node_modules\\typescript\\lib"
+}

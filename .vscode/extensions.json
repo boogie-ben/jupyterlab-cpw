@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    // vue3+ts的语言工具
+    "vue.volar",
+
+    // eslint
+    "dbaeumer.vscode-eslint",
+
+  ]
+}
