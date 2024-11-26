@@ -53,7 +53,8 @@ function activate(
     browserFactory,
     autoStartDefault: true,
     canStartKernel: true,
-    shutdownOnClose: true,
+    // shutdownOnClose: true,
+    shutdownOnClose: false,
     preferKernel: true
   });
 
