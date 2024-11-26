@@ -50,7 +50,11 @@ function activate(
     defaultFor: ['cpw'],
     commands: app.commands,
     serviceManager: app.serviceManager,
-    browserFactory
+    browserFactory,
+    autoStartDefault: true,
+    canStartKernel: true,
+    shutdownOnClose: true,
+    preferKernel: true
   });
 
   factory.widgetCreated.connect((sender, widget) => {

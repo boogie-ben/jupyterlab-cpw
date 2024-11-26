@@ -11,16 +11,7 @@ import * as nbformat from '@jupyterlab/nbformat';
 // import { MathJaxTypesetter } from '@jupyterlab/mathjax-extension';
 // import { createMarkdownParser } from '@jupyterlab/markedparser-extension';
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
-
-// import {
-//   // KernelManager,
-//   Kernel,
-//   Session
-//   // SessionAPI,
-//   // ContentsManager,
-//   // SessionManager
-// } from '@jupyterlab/services';
-
+// import { SessionContext } from '@jupyterlab/apputils';
 import {
   standardRendererFactories as initialFactories,
   RenderMimeRegistry
@@ -58,18 +49,6 @@ class CPWWidget extends Widget {
   private _serviceManager: ServiceManager.IManager;
   private _browserFactory: IFileBrowserFactory;
   private _context: DocumentRegistry.Context;
-  // private kernelManager = new KernelManager();
-  // private kernel: Kernel.IKernelConnection | undefined;
-  // private rendermine = new RenderMimeRegistry({ initialFactories });
-  // private grahp: { cells: any[] };
-
-  // get cells() {
-  //   return this.grahp.cells.filter(cell => cell.shape === 'cpw-shape');
-  // }
-
-  // get kernelManager() {
-  //   return this._serviceManager.kernels;
-  // }
 
   get sessionContext() {
     return this._context.sessionContext;
@@ -99,10 +78,6 @@ class CPWWidget extends Widget {
     this.node.appendChild(btn);
     this.node.style.overflow = 'auto';
 
-    // this._context.pathChanged.connect(() => {
-    //   this.filePath = this._context.path;
-    // }, this);
-
     this._context.ready.then(async () => {
       const content = this._context.model.toString();
       if (!content) {
@@ -113,31 +88,13 @@ class CPWWidget extends Widget {
       const { cells } = JSON.parse(this._context.model.toString());
       this.div.appendChild(ren(cells));
       this.node.appendChild(this.div);
-
-      // const exSession = await this.sessionContext.sessionManager.findByPath(
-      //   this.sessionContext.path
-      // );
-
-      // if (exSession) {
-      //   console.log(111, exSession);
-      //   // this.sessionContext.sessionManager.connectTo({ model: exSession });
-      //   this.sessionContext.sessionManager.connectTo({ model: exSession });
-      // } else {
-      //   console.log(222, exSession);
-      // todo 直接每次都startNew就行，在后面流水线每次执行都开启一个session，完毕后消除
-      this.sessionContext.sessionManager.startNew({
-        kernel: { name: 'python' },
-        name: this.sessionContext.name,
-        path: this.sessionContext.path,
-        type: 'notebook'
-      });
-      // }
     });
   }
 
   async run() {
     if (this.sessionContext.session?.kernel?.status !== 'idle') {
       // todo 提醒dialog
+      console.log('内核未准备', this.sessionContext.session);
       return;
     }
 
@@ -194,8 +151,10 @@ class CPWWidget extends Widget {
   // }
 
   // dispose() {
-  // this.kernel?.dispose();
-  // this.kernelManager.dispose();
+  //   // this.sessionContext
+  //   // this.sessionContext.dispose();
+  //   // this.kernel?.dispose();
+  //   // this.kernelManager.dispose();
   //   super.dispose();
   // }
 }
