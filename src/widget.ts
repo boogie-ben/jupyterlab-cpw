@@ -4,18 +4,21 @@ import { DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyterlab/
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
-
-import { renderCpw } from './core/index'
+// import * as nbformat from '@jupyterlab/nbformat'
+import { renderCPW } from './core/index'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
+const dispatchEvent: CPW.DispatchEvent = (id, payload) => {
+  window.dispatchEvent(new CustomEvent(`cpw-event-${id}`, { detail: payload }))
+}
+
 class CPWWidget extends Widget {
-  readonly div: HTMLDivElement
   private _commands: CommandRegistry
   private _context: DocumentRegistry.Context
 
-  get sessionContext () {
-    return this._context.sessionContext
+  get session () {
+    return this._context.sessionContext.session
   }
 
   constructor (options: { commands: CommandRegistry, context: DocumentRegistry.Context }) {
@@ -23,52 +26,36 @@ class CPWWidget extends Widget {
     this._commands = options.commands
     this._context = options.context
 
-    const div = document.createElement('div')
-    const btn = document.createElement('button')
-    btn.innerText = 'run'
-
-    btn.onclick = () => this.run()
-
-    this.div = div
-    this.node.appendChild(btn)
-    this.node.style.overflow = 'auto'
-
-    this._context.ready.then(async () => {
+    this._context.ready.then(() => {
       const content = this._context.model.toString()
       if (!content) {
-        this._context.model.fromString(JSON.stringify({ cells: [] })) // 画布对象
+        this._context.model.fromString(JSON.stringify({ graph: { cells: [] } })) // 画布对象
         this._commands.execute('docmanager:save')
       }
       console.log(this)
-      this.node.appendChild(this.div)
-      renderCpw(this.div, this._context.model.toString())
+      window.addEventListener(`cpw-action-${this.id}`, this)
+      renderCPW(this.node, this.id, this._context.model.toString())
     })
   }
 
-  async run () {
-    if (this.sessionContext.session?.kernel?.status !== 'idle') {
+  handleEvent (e: CustomEvent<CPW.ActionPayload<CPW.ActionType>>) {
+    this[e.detail.type]?.(e.detail.data as any)
+  }
+
+  async run (payload: CPW.ActionPayloadData['run']) {
+    if (this.session?.kernel?.status !== 'idle') {
       // todo 提醒dialog
-      console.log('内核未准备', this.sessionContext)
+      console.log('内核未准备', this._context.sessionContext)
       return
     }
-
-    // todo更改为参数传入
-    const content = JSON.parse(this._context.model.toString())
-
-    const len = content.cells.length
+    // todo 分支并行执行逻辑
+    const { cells } = payload
+    const len = cells.length
     for (let i = 0; i < len; i++) {
       // todo 中断内核时打断循环
-      const { id, source } = content.cells[i]
-
-      const outputArea = new OutputArea({
-        model: new OutputAreaModel(),
-        rendermime,
-      })
-
-      outputArea.future = this.sessionContext.session.kernel.requestExecute({
-        code: source.join('\n'),
-      })
-
+      const { id, code } = cells[i]
+      const outputArea = new OutputArea({ model: new OutputAreaModel(), rendermime })
+      outputArea.future = this.session.kernel.requestExecute({ code })
       await outputArea.future.done
       const outputNode = document.getElementById(id)!
       outputNode.textContent = ''
@@ -78,21 +65,32 @@ class CPWWidget extends Widget {
     console.log('done')
   }
 
-  // kernelResert() {
-  //   this.kernel?.restart();
-  // }
+  kernelResert () {
+    this.session?.kernel?.restart()
+  }
 
-  // kernelInterrupt() {
-  //   this.kernel?.interrupt();
-  // }
+  kernelInterrupt () {
+    // todo 打断正在执行的run循环
+    this.session?.kernel?.interrupt()
+  }
 
-  // dispose() {
-  //   // this.sessionContext
-  //   // this.sessionContext.dispose();
-  //   // this.kernel?.dispose();
-  //   // this.kernelManager.dispose();
-  //   super.dispose();
-  // }
+  kernelStatus () {
+    dispatchEvent(this.id, { type: 'kernelStatus', data: { status: this.session?.kernel?.status || 'unknown' } })
+  }
+
+  exportIpynb () {
+    // todo 流水线导出为notebook
+  }
+
+  change (payload: CPW.ActionPayloadData['change']) {
+    const { graph } = payload
+    this._context.model.fromString(graph)
+  }
+
+  dispose () {
+    window.removeEventListener(`cpw-action-${this.id}`, this, false)
+    super.dispose()
+  }
 }
 
 export class CPWDocumentWidget extends DocumentWidget<CPWWidget> {
