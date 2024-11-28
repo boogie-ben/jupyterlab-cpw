@@ -25,6 +25,15 @@ function activate (
 ) {
   const tracker = new WidgetTracker<CPWDocumentWidget>({ namespace: 'cpw' })
 
+  const ob = new MutationObserver(() => {
+    if (JSON.parse(document.body.getAttribute('data-jp-theme-light') || 'true')) {
+      document.documentElement.removeAttribute('theme-mode')
+    } else {
+      document.documentElement.setAttribute('theme-mode', 'dark')
+    }
+  })
+  ob.observe(document.body, { attributeFilter: ['data-jp-theme-light'] })
+
   restorer.restore(tracker, {
     command: 'docmanager:open',
     args: widget => ({ path: widget.context.path, factory: FACTORY }),
@@ -76,9 +85,6 @@ function activate (
   launcher.add({ command: COMMAND, category: 'Workflow', rank: 0 })
 }
 
-/**
- * Initialization data for the canvas-ext extension.
- */
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'cpw:plugin',
   description: 'Enable Canvas Pipeline Workflow.',
