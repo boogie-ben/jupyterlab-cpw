@@ -1,8 +1,3 @@
-declare module '*.svg' {
-  const value: string
-  export default value
-}
-
 declare namespace CPW {
   export interface Cell {
     id: string
@@ -36,7 +31,7 @@ declare namespace CPW {
   }
 
   // *------- 从vue应用内调用的action ------------
-  export type ActionType = 'run' | 'kernelResert' | 'kernelInterrupt' | 'exportIpynb' | 'change' | 'kernelStatus'
+  export type ActionType = 'run' | 'kernelResert' | 'kernelInterrupt' | 'exportIpynb' | 'change' | 'kernelStatus' | 'save'
 
   export interface ActionPayloadData {
     run: { cells: RunnerCell[] }

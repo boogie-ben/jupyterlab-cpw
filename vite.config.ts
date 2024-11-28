@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => {
       }),
       vue(),
       vueJsx(),
-      dts({
+      /* mode !== 'dev' &&  */dts({
+        copyDtsFiles: true,
         // 去除src/目录层级
         beforeWriteFile: (filepath, content) => ({ filePath: join(outDir, relative(outDirSrc, filepath)), content }),
       }),
