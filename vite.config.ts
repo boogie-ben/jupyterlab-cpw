@@ -16,7 +16,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       nodeExternals({
-        exclude: ['@jupyterlab', '@lumino'],
+        // exclude: ['vue', 'tdesign-vue-next'],
+        // deps: false,
+        // include: [/^@lumino/, /^@jupyterlab/],
       }),
       vue(),
       vueJsx(),

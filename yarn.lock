@@ -15,6 +15,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@antv/x6-common@npm:^2.0.16":
+  version: 2.0.17
+  resolution: "@antv/x6-common@npm:2.0.17"
+  dependencies:
+    lodash-es: ^4.17.15
+    utility-types: ^3.10.0
+  checksum: edbb1995cb600df4e9c985dcf192e25fe1df868fe953d38e33848ad78919c88adfae09cbd6e32122ef4336b6f733689b08a6c9855f62dec4be72aeca5add51dd
+  languageName: node
+  linkType: hard
+
+"@antv/x6-geometry@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "@antv/x6-geometry@npm:2.0.5"
+  checksum: fec8e1abc6f8b532149062c721696e6acb2937f77065afad01df9cc959450746d47893e56a7efa5031fae77a7d926c776d4334c3c1a8d788dc091d6fde920a95
+  languageName: node
+  linkType: hard
+
+"@antv/x6-vue-shape@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "@antv/x6-vue-shape@npm:2.1.2"
+  dependencies:
+    vue-demi: latest
+  peerDependencies:
+    "@antv/x6": ^2.x
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^2.0.0 || >=3.0.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  checksum: ba044ce3f96d2554495abd5115e2113db1e344da418914624cfbd5f74dc29b9cd7f5a68ef031a3e984544730ecb478b170fa2bfd8c02afd50e393c5920b61a24
+  languageName: node
+  linkType: hard
+
+"@antv/x6@npm:^2.18.1":
+  version: 2.18.1
+  resolution: "@antv/x6@npm:2.18.1"
+  dependencies:
+    "@antv/x6-common": ^2.0.16
+    "@antv/x6-geometry": ^2.0.5
+    utility-types: ^3.10.0
+  checksum: 27d08ad7fc8f1be94233e38a309bd6c599082b7833364c521718ad992549a5c0aed0a1346dd9c158f6f38e232a4f9dbc295e2943584545407862538f0008437a
+  languageName: node
+  linkType: hard
+
 "@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.24.7, @babel/code-frame@npm:^7.25.9, @babel/code-frame@npm:^7.26.0":
   version: 7.26.2
   resolution: "@babel/code-frame@npm:7.26.2"
@@ -6017,6 +6061,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab_cpw@workspace:."
   dependencies:
+    "@antv/x6": ^2.18.1
+    "@antv/x6-vue-shape": ^2.1.2
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/apputils": ^4.4.1
     "@jupyterlab/builder": ^4.0.0
@@ -6191,7 +6237,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash-es@npm:^4.17.21":
+"lodash-es@npm:^4.17.15, lodash-es@npm:^4.17.21":
   version: 4.17.21
   resolution: "lodash-es@npm:4.17.21"
   checksum: 05cbffad6e2adbb331a4e16fbd826e7faee403a1a04873b82b42c0f22090f280839f85b95393f487c1303c8a3d2a010048bf06151a6cbe03eee4d388fb0a12d2
@@ -8931,6 +8977,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"utility-types@npm:^3.10.0":
+  version: 3.11.0
+  resolution: "utility-types@npm:3.11.0"
+  checksum: 35a4866927bbea5d037726744028d05c6e37772ded2aabaca21480ce9380185436aef586ead525e327c7f3c640b1a3287769a12ef269c7b165a2ddd50ea6ad61
+  languageName: node
+  linkType: hard
+
 "validate-npm-package-license@npm:^3.0.1":
   version: 3.0.4
   resolution: "validate-npm-package-license@npm:3.0.4"
@@ -9112,6 +9165,22 @@ __metadata:
   dependencies:
     vscode-jsonrpc: ^8.0.2
   checksum: eb2fdb5c96f124326505f06564dfc6584318b748fd6e39b4c0ba16a0d383d13ba0e9433596abdb841428dfc2a5501994c3206723d1cb38c6af5fcac1faf4be26
+  languageName: node
+  linkType: hard
+
+"vue-demi@npm:latest":
+  version: 0.14.10
+  resolution: "vue-demi@npm:0.14.10"
+  peerDependencies:
+    "@vue/composition-api": ^1.0.0-rc.1
+    vue: ^3.0.0-0 || ^2.6.0
+  peerDependenciesMeta:
+    "@vue/composition-api":
+      optional: true
+  bin:
+    vue-demi-fix: bin/vue-demi-fix.js
+    vue-demi-switch: bin/vue-demi-switch.js
+  checksum: 9b4106f99be3b0c1dd4a6dc5725f5e8f79c6b98d1eeb849bf2c54416cd77f4aa344960b202768865245cfa82d57f49a9d96f67f5d8e256604b9dac1c5df9a8d6
   languageName: node
   linkType: hard
 

@@ -9,7 +9,7 @@ import { ILauncher } from '@jupyterlab/launcher'
 import { WidgetTracker } from '@jupyterlab/apputils'
 import { CPWDocumentWidget, CPWFactory } from './widget'
 
-import Icon from '../style/icons/logo.svg'
+import Icon from './icons/logo.svg'
 import { LabIcon } from '@jupyterlab/ui-components'
 
 const cpwIcon = new LabIcon({ name: 'cpw:icon', svgstr: Icon })
@@ -31,7 +31,7 @@ function activate (
     name: widget => widget.context.path,
   })
 
-  console.log(app)
+  // console.log(app)
 
   const factory = new CPWFactory({
     name: FACTORY,

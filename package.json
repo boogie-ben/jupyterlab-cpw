@@ -36,6 +36,8 @@
         "build:labextension:prod": "jupyter labextension build .",
         "build:lib": "vite build --mode=dev",
         "build:lib:prod": "vite build",
+        "clean": "jlpm clean:lib",
+        "clean:lib": "rimraf lib",
         "clean:lintcache": "rimraf .eslintcache .stylelintcache",
         "clean:labextension": "rimraf jupyterlab_cpw/labextension jupyterlab_cpw/_version.py",
         "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
@@ -45,6 +47,8 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
+        "@antv/x6": "^2.18.1",
+        "@antv/x6-vue-shape": "^2.1.2",
         "@jupyterlab/application": "^4.0.0",
         "@jupyterlab/apputils": "^4.4.1",
         "@jupyterlab/docregistry": "^4.3.1",
