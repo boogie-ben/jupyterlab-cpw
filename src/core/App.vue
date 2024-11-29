@@ -1,6 +1,13 @@
 <template>
-  <div style="height: 100%; width: 100%; overflow: auto;">
-    <button @click="run">run</button>
+  <div class="cpw-renderer">
+    <div class="cpw-dnd">
+      <!--  -->
+    </div>
+    <div
+      ref="dom"
+      style="height: 100%;"
+    />
+    <!-- <button @click="run">run</button>
     <div>{{ kernelStatus }}</div>
     <div
       v-for="cell in cells"
@@ -9,7 +16,6 @@
     >
       <hr />
       <div>{{ cell.status }}</div>
-      <!-- <div style="background-color: #222;">{{ cell.source }}</div> -->
       <textarea
         v-model="cell.source"
         @input="contentChange"
@@ -19,14 +25,17 @@
         <button @click="showOutput(cell)">show output</button>
         <div :id="cell.id" />
       </template>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script lang="ts" setup>
-import { getCurrentInstance, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { getCurrentInstance, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import { dispatchAction } from './actionEvent'
 import type { Kernel } from '@jupyterlab/services'
+import { Graph } from '@antv/x6'
+import { initGraph } from './graph'
+
 const props = defineProps<{
   id: string
   fileContent: any
@@ -36,6 +45,29 @@ const app = getCurrentInstance()?.appContext.app
 
 // 整个fileContent会在初始化时传入，并且不会变更，只有vue应用会单向往widget传递最新的fileContnet
 const cells = reactive<CPW.Cell[]>(props.fileContent.graph.cells)
+
+const dom = useTemplateRef('dom')
+
+let graph: Graph
+onMounted(() => {
+  graph = initGraph(dom.value!)
+  graph.on('node:click', (a) => console.log(a))
+  graph.fromJSON({ cells: [] })
+
+  graph.addNode({
+    shape: 'cpw-cell-node',
+    x: 100,
+    y: 600,
+    data: {
+      name: '啊实打实的',
+      status: 'running',
+    },
+  })
+
+  setTimeout(() => {
+    graph.getNodes()[0].setData({ name: '12321', status: 'done' }, { deep: false })
+  }, 3000)
+})
 
 const kernelStatus = ref<Kernel.Status>('unknown')
 

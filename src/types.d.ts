@@ -25,9 +25,9 @@ declare namespace CPW {
   }
 
   export interface RunnerCell {
-    id: string
+    readonly id: string
     /** 运行workflow时，把source处理后交由内核实际运行的代码 */
-    code: string
+    readonly code: string
   }
 
   // *------- 从vue应用内调用的action ------------

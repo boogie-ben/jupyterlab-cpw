@@ -32,6 +32,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@antv/x6-plugin-dnd@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "@antv/x6-plugin-dnd@npm:2.1.1"
+  peerDependencies:
+    "@antv/x6": ^2.x
+  checksum: e2625a5102ea90be4edc2023f33e6b160632470d759a0715379235289ad317b0cd78c5e44458a36a4fee82be7be9db93c311688067f112d009e2c835da7a19bd
+  languageName: node
+  linkType: hard
+
 "@antv/x6-vue-shape@npm:^2.1.2":
   version: 2.1.2
   resolution: "@antv/x6-vue-shape@npm:2.1.2"
@@ -6062,6 +6071,7 @@ __metadata:
   resolution: "jupyterlab_cpw@workspace:."
   dependencies:
     "@antv/x6": ^2.18.1
+    "@antv/x6-plugin-dnd": ^2.1.1
     "@antv/x6-vue-shape": ^2.1.2
     "@jupyterlab/application": ^4.0.0
     "@jupyterlab/apputils": ^4.4.1
