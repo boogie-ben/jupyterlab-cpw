@@ -1,4 +1,4 @@
-import { Graph } from '@antv/x6'
+import { Graph /* , Path */ } from '@antv/x6'
 import { Dnd } from '@antv/x6-plugin-dnd'
 import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
@@ -7,47 +7,73 @@ const portAttrs = {
   circle: {
     r: 4,
     magnet: true,
-    stroke: '#4787F0',
+    stroke: 'var(--cpw-cell-border-color)',
     strokeWidth: 1,
-    fill: '#D4E3FC',
+    fill: 'var(--cpw-cell-port-bg-color)',
     style: { visibility: 'hidden' },
   },
 }
 
-const portConfig = {
-  groups: {
-    top: {
-      position: 'top',
-      attrs: portAttrs,
+register({
+  shape: 'cpw-cell-node',
+  component: CPWNode,
+  height: 40,
+  width: 220,
+  ports: {
+    groups: {
+      top: { position: 'top', attrs: portAttrs },
+      bottom: { position: 'bottom', attrs: portAttrs },
+      left: { position: 'left', attrs: portAttrs },
+      right: { position: 'right', attrs: portAttrs },
     },
-    bottom: {
-      position: 'bottom',
-      attrs: portAttrs,
-    },
-    left: {
-      position: 'left',
-      attrs: portAttrs,
-    },
-    right: {
-      position: 'right',
-      attrs: portAttrs,
-    },
+    items: [
+      { id: 'port1', group: 'top' },
+      { id: 'port2', group: 'right' },
+      { id: 'port3', group: 'bottom' },
+      { id: 'port4', group: 'left' },
+    ],
   },
-  items: [
-    { id: 'port1', group: 'top' },
-    { id: 'port2', group: 'bottom' },
-    { id: 'port3', group: 'left' },
-    { id: 'port4', group: 'right' },
-  ],
-}
+})
+
+// Graph.registerConnector(
+//   'cpw-connector',
+//   (s, e) => {
+//     const offset = 4
+//     const deltaY = Math.abs(e.y - s.y)
+//     const control = Math.floor((deltaY / 3) * 2)
+
+//     const v1 = { x: s.x, y: s.y + offset + control }
+//     const v2 = { x: e.x, y: e.y - offset - control }
+
+//     return Path.normalize(
+//       `M ${s.x} ${s.y}
+//      L ${s.x} ${s.y + offset}
+//      C ${v1.x} ${v1.y} ${v2.x} ${v2.y} ${e.x} ${e.y - offset}
+//      L ${e.x} ${e.y}
+//     `,
+//     )
+//   },
+//   true,
+// )
+
+Graph.registerEdge(
+  'cpw-edge',
+  {
+    inherit: 'edge',
+    attrs: {
+      line: {
+        // stroke: '#C2C8D5',
+        stroke: 'var(--cpw-line-color)',
+        strokeWidth: 0.8,
+        targetMarker: { name: 'classic', args: { width: 6, height: 4 } },
+      },
+    },
+    zIndex: -1,
+  },
+  true,
+)
 
 export const initGraph = (dom: HTMLElement) => {
-  register({
-    shape: 'cpw-cell-node',
-    component: CPWNode,
-    ports: portConfig,
-  })
-
   const graph = new Graph({
     container: dom,
     autoResize: true,
@@ -59,14 +85,64 @@ export const initGraph = (dom: HTMLElement) => {
       args: { color: '#999', thickness: 1 }, // 网格会生成一个base64的图片，不能使用动态css变量
     },
     background: { color: 'var(--cpw-grid-bg-color)' },
-    panning: true,
-    // interacting: { nodeMovable: false, '' },
+    panning: true, // 平移
+    // port连线
     connecting: {
-      // anchor: 'center',
+      anchor: 'center',
+      snap: true,
       connectionPoint: 'anchor',
-      // snap: true, // 自动吸附
-      // highlight: true
+      allowBlank: false,
+      allowLoop: false,
+      allowMulti: false,
+      allowEdge: false,
+      allowNode: false,
+      highlight: true,
+      router: 'metro',
+      connector: 'rounded',
+      // connector: 'cpw-connector',
+      createEdge () {
+        return this.createEdge({
+          shape: 'cpw-edge',
+          attrs: { line: { strokeDasharray: '5 5' } },
+        })
+      },
     },
+    // 连接时高亮port
+    highlighting: {
+      magnetAdsorbed: {
+        name: 'stroke',
+        args: { attrs: { stroke: '#0052d9', 'stroke-width': 1.5 } },
+      },
+    },
+    // 画布缩放
+    mousewheel: {
+      enabled: true,
+      modifiers: ['ctrl', 'meta'],
+    },
+    scaling: {
+      max: 5,
+      min: 0.1,
+    },
+  })
+
+  graph.on('edge:connected', ({ edge }) => {
+    edge.attr({ line: { strokeDasharray: '' } })
+  })
+
+  graph.on('edge:mouseenter', ({ edge }) => {
+    edge.attr({ line: { stroke: 'var(--cpw-line-hover-color)' } })
+  })
+
+  graph.on('edge:mouseleave', ({ edge }) => {
+    edge.attr({ line: { stroke: 'var(--cpw-line-color)' } })
+  })
+
+  graph.on('node:mouseenter', ({ node }) => {
+    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'visible' } }))
+  })
+
+  graph.on('node:mouseleave', ({ node }) => {
+    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'hidden' } }))
   })
 
   return graph
@@ -88,4 +164,20 @@ export const statusIcon = {
   done: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2ba471" d="M20.985 7.378L10.38 17.985l-6.364-6.364l1.414-1.414l4.95 4.95l9.192-9.193z"/></svg>',
   changed: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#aaa" d="M12 15a3 3 0 1 1 0-6a3 3 0 0 1 0 6Z"/></svg>',
   waiting: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#aaa" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8"/><path fill="#aaa" d="M12.5 7H11v6l5.25 3.15l.75-1.23l-4.5-2.67z"/></svg>',
+}
+
+export const contextMenuItemHeight = 24
+export const contextMenuItemWidth = 150
+
+export const getContextMenuPosition = (itemCount: number, mousePosition: { x: number, y: number }) => {
+  const { x, y } = mousePosition
+  const width = contextMenuItemWidth + 2 // 2px边框
+  const height = itemCount * contextMenuItemHeight + 8 + 2 // menu有固定上下padding各4px, border上下各1px
+  const menuPos = { x, y }
+  // 边界溢出处理
+  const flipX = x + width > window.innerWidth
+  const flipY = y + height > window.innerHeight
+  if (flipX) menuPos.x -= width
+  if (flipY) menuPos.y -= height
+  return menuPos
 }

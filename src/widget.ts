@@ -13,6 +13,10 @@ const dispatchEvent: CPW.DispatchEvent = (id, payload) => {
   window.dispatchEvent(new CustomEvent(`cpw-event-${id}`, { detail: payload }))
 }
 
+const defaultFileContent: CPW.FileSchema = {
+  cells: [],
+}
+
 class CPWWidget extends Widget {
   private _commands: CommandRegistry
   private _context: DocumentRegistry.Context
@@ -29,10 +33,10 @@ class CPWWidget extends Widget {
     this._context.ready.then(() => {
       const content = this._context.model.toString()
       if (!content) {
-        this._context.model.fromString(JSON.stringify({ graph: { cells: [] } })) // 画布对象
+        this._context.model.fromString(JSON.stringify(defaultFileContent)) // 画布对象
         this.save()
       }
-      console.log(this)
+      // console.log(this)
       window.addEventListener(`cpw-action-${this.id}`, this)
       renderCPW(this.node, this.id, this._context.model.toString())
     })
@@ -55,7 +59,7 @@ class CPWWidget extends Widget {
     for (let i = 0; i < len; i++) {
       // todo 中断内核时打断循环
       const { id, code } = cells[i]
-      dispatchEvent(this.id, { type: 'updateCellStatus', data: { id, status: 'running' } })
+      dispatchEvent(this.id, { type: 'cellStatus', data: { id, status: 'running' } })
       const outputArea = new OutputArea({
         model: new OutputAreaModel(),
         maxNumberOutputs: 50, // 50和notebook的默认值一致
@@ -64,9 +68,9 @@ class CPWWidget extends Widget {
       outputArea.future = this.session.kernel.requestExecute({ code })
       await outputArea.future.done
       const outputs = outputArea.model.toJSON()
-      dispatchEvent(this.id, { type: 'updateCellOutputs', data: { id, outputs, node: outputArea.node } })
+      dispatchEvent(this.id, { type: 'cellOutputs', data: { id, outputs, node: outputArea.node } })
       const isErr = !!outputs.find(output => output.output_type === 'error')
-      dispatchEvent(this.id, { type: 'updateCellStatus', data: { id, status: isErr ? 'error' : 'done' } })
+      dispatchEvent(this.id, { type: 'cellStatus', data: { id, status: isErr ? 'error' : 'done' } })
       console.log('done')
 
       /**

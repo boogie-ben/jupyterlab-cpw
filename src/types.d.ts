@@ -1,6 +1,14 @@
 declare namespace CPW {
+
+  /** .cpw文件的JSON模型 */
+  export interface FileSchema {
+    cells: import('@antv/x6').Cell.Properties[]
+  }
+
   export interface Cell {
     id: string
+
+    name: string
 
     /** 节点源代码 */
     source: string
@@ -68,11 +76,11 @@ declare namespace CPW {
   }
 
   // *------- 从jupyter插件widget往vue应用派发的事件 ------------
-  export type EventType = 'updateCellOutputs' | 'updateCellStatus' | 'kernelStatus' | 'dispose'
+  export type EventType = 'cellOutputs' | 'cellStatus' | 'kernelStatus' | 'dispose'
 
   export interface EventPayloadData {
-    updateCellOutputs: { id: string, outputs: Cell['outputs'], node: HTMLElement }
-    updateCellStatus: { id: string, status: Cell['status'] }
+    cellOutputs: { id: string, outputs: Cell['outputs'], node: HTMLElement }
+    cellStatus: { id: string, status: Cell['status'] }
     kernelStatus: { status: import('@jupyterlab/services').Kernel.Status }
     dispose: null
   }
@@ -85,12 +93,26 @@ declare namespace CPW {
   /** 从jupyter插件widget往vue应用派发事件 */
   export interface DispatchEvent {
     /** 对指定id的cell派发执行后输出的outputs数组 */
-    (id: string, payload: EventPayload<'updateCellOutputs'>): any
+    (id: string, payload: EventPayload<'cellOutputs'>): any
     /** 对指定id的cell派发节点状态 */
-    (id: string, payload: EventPayload<'updateCellStatus'>): any
+    (id: string, payload: EventPayload<'cellStatus'>): any
     /** 派发当前内核状态 */
     (id: string, payload: EventPayload<'kernelStatus'>): any
     /** widget在dispose时派发 */
     (id: string, payload: EventPayload<'dispose'>): any
   }
+
+  // * -------------------
+  export interface ContextMenuItem {
+    label: string
+    onClick: (e: MouseEvent) => any
+  }
+
+  /**
+   * 运行类型
+   * - all 运行所有
+   * - to-current 运行至所选节点
+   * - single 运行单个节点
+   */
+  export type RunType = 'all' | 'to-current' | 'single'
 }
