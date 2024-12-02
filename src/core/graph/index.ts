@@ -2,14 +2,15 @@ import { Graph /* , Path */ } from '@antv/x6'
 import { Dnd } from '@antv/x6-plugin-dnd'
 import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
+import { btnIcons } from '../utils'
 
 const portAttrs = {
   circle: {
     r: 4,
     magnet: true,
-    stroke: 'var(--cpw-cell-border-color)',
+    stroke: 'var(--cell-border-color)',
     strokeWidth: 1,
-    fill: 'var(--cpw-cell-port-bg-color)',
+    fill: 'var(--cell-port-bg-color)',
     style: { visibility: 'hidden' },
   },
 }
@@ -63,7 +64,7 @@ Graph.registerEdge(
     attrs: {
       line: {
         // stroke: '#C2C8D5',
-        stroke: 'var(--cpw-line-color)',
+        stroke: 'var(--line-color)',
         strokeWidth: 0.8,
         targetMarker: { name: 'classic', args: { width: 6, height: 4 } },
       },
@@ -82,9 +83,9 @@ export const initGraph = (dom: HTMLElement) => {
       size: 10,
       visible: true,
       type: 'dot',
-      args: { color: '#999', thickness: 1 }, // 网格会生成一个base64的图片，不能使用动态css变量
+      args: { color: '#777', thickness: 1 }, // 网格会生成一个base64的图片，不能使用动态css变量
     },
-    background: { color: 'var(--cpw-grid-bg-color)' },
+    background: { color: 'var(--grid-bg-color)' },
     panning: true, // 平移
     // port连线
     connecting: {
@@ -111,7 +112,7 @@ export const initGraph = (dom: HTMLElement) => {
     highlighting: {
       magnetAdsorbed: {
         name: 'stroke',
-        args: { attrs: { stroke: '#0052d9', 'stroke-width': 1.5 } },
+        args: { attrs: { stroke: '#0052d9', 'stroke-width': 2 } },
       },
     },
     // 画布缩放
@@ -130,11 +131,11 @@ export const initGraph = (dom: HTMLElement) => {
   })
 
   graph.on('edge:mouseenter', ({ edge }) => {
-    edge.attr({ line: { stroke: 'var(--cpw-line-hover-color)' } })
+    edge.attr({ line: { stroke: 'var(--line-hover-color)' } })
   })
 
   graph.on('edge:mouseleave', ({ edge }) => {
-    edge.attr({ line: { stroke: 'var(--cpw-line-color)' } })
+    edge.attr({ line: { stroke: 'var(--line-color)' } })
   })
 
   graph.on('node:mouseenter', ({ node }) => {
@@ -166,13 +167,20 @@ export const statusIcon = {
   waiting: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#aaa" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8"/><path fill="#aaa" d="M12.5 7H11v6l5.25 3.15l.75-1.23l-4.5-2.67z"/></svg>',
 }
 
-export const contextMenuItemHeight = 24
-export const contextMenuItemWidth = 150
+export type ContextMenuItem = { label?: string, onClick?: (e: MouseEvent) => any, icon?: keyof typeof btnIcons, divider?: boolean }
 
-export const getContextMenuPosition = (itemCount: number, mousePosition: { x: number, y: number }) => {
+export const contextMenuItemHeight = 24
+export const contextMenuItemWidth = 200
+
+export const getContextMenuPosition = (items: ContextMenuItem[], mousePosition: { x: number, y: number }) => {
   const { x, y } = mousePosition
   const width = contextMenuItemWidth + 2 // 2px边框
-  const height = itemCount * contextMenuItemHeight + 8 + 2 // menu有固定上下padding各4px, border上下各1px
+  let itemCount = 0
+  let dividerCount = 0
+  items.forEach(o => o.divider ? dividerCount++ : itemCount++)
+
+  const height = (itemCount * contextMenuItemHeight) + (dividerCount * 9) + (8 + 2) // menu有固定上下padding各4px, border上下各1px, divider固定为9px
+
   const menuPos = { x, y }
   // 边界溢出处理
   const flipX = x + width > window.innerWidth

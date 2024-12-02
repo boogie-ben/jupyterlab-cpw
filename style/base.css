@@ -5,37 +5,56 @@
 */
 
 .cpw-renderer {
-  --cpw-grid-bg-color: #f3f3f3;
+  --grid-bg-color: #f3f3f3;
 
-  --cpw-cell-bg-color: #fff;
-  --cpw-cell-border-color: #bcc4d0;
-  --cpw-cell-active-outline-color: #0052d9;
-  --cpw-cell-port-bg-color: #f3f3f3;
+  --cell-bg-color: #fff;
+  --cell-border-color: #bcc4d0;
+  --cell-active-outline-color: #0052d9;
+  --cell-port-bg-color: #f3f3f3;
 
-  --cpw-line-color: #999;
-  --cpw-line-hover-color: #0052d9;
+  --line-color: #999;
+  --line-hover-color: #0052d9;
 }
 
-:root[theme-mode=dark] .cpw-renderer {
-  --cpw-grid-bg-color: #181818;
+[data-jp-theme-light=false] .cpw-renderer {
+  --grid-bg-color: #181818;
 
-  --cpw-cell-bg-color: #2c2c2c;
-  --cpw-cell-border-color: #6f6f6f;
-  --cpw-cell-active-outline-color: #4582e6;
-  --cpw-cell-port-bg-color: #181818;
+  --cell-bg-color: #2c2c2c;
+  --cell-border-color: #6f6f6f;
+  --cell-active-outline-color: #4582e6;
+  --cell-port-bg-color: #181818;
 
-  --cpw-line-color: #acacac;
-  --cpw-line-hover-color: #4582e6;
+  --line-color: #acacac;
+  --line-hover-color: #4582e6;
 }
 
 .cpw-renderer {
   box-sizing: border-box;
   height: 100%;
   width: 100%;
+  --toolbar-height: 33px;
+  /* --toolbar-height: 41px; */
 }
 
 .cpw-renderer * {
   box-sizing: border-box;
+}
+
+.cpw-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  column-gap: 8px;
+  padding: 0 4px;
+  /* line-height: 24px; */
+  height: var(--toolbar-height);
+  background-color: var(--jp-toolbar-background);
+  border-bottom: 1px solid var(--jp-toolbar-border-color);
+}
+
+.cpw-graph {
+  height: calc(100% - var(--toolbar-height));
 }
 
 .cpw-cell-node {
@@ -45,14 +64,14 @@
   width: 100%;
   height: 100%;
   padding: 0 8px;
-  border: 1px solid var(--cpw-cell-border-color);
+  border: 1px solid var(--cell-border-color);
   border-radius: 6px;
-  background-color: var(--cpw-cell-bg-color);
-  /* cursor: auto; */
+  background-color: var(--cell-bg-color);
+  cursor: auto;
 }
 
 .cpw-cell-node.cpw-cell-node-active {
-  outline: 2px solid var(--cpw-cell-active-outline-color);
+  outline: 2px solid var(--cell-active-outline-color);
 }
 
 .cpw-cell-node .cpw-node-name {
@@ -65,7 +84,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  border-right: 1px solid var(--cpw-cell-border-color);
+  border-right: 1px solid var(--cell-border-color);
 }
 
 .cpw-cell-node .cpw-node-icon {
@@ -76,19 +95,48 @@
 
 .cpw-contextmenu {
   position: absolute;
+  box-sizing: border-box;
+}
+
+.cpw-contextmenu * {
+  box-sizing: border-box;
 }
 
 .cpw-contextmenu .cpw-contextmenu-item {
-  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: 8px;
+  padding: 0 8px;
   font-size: 13px;
   height: var(--item-height, 24px);
   line-height: var(--item-height, 24px);
   width: var(--item-width, 150px);
+}
+
+.cpw-contextmenu .cpw-contextmenu-item:hover {
+  background-color: var(--jp-layout-color2);
+}
+
+.cpw-contextmenu .cpw-contextmenu-item .cpw-contextmenu-item-label {
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cpw-contextmenu .cpw-contextmenu-item:hover {
+.cpw-contextmenu .cpw-contextmenu-item .cpw-contextmenu-item-icon {
+  flex-shrink: 0;
+  height: var(--item-icon-size, 16px);
+  width: var(--item-icon-size, 16px);
+}
+
+.cpw-contextmenu .cpw-contextmenu-item .cpw-contextmenu-item-icon svg {
+  vertical-align: top;
+}
+
+.cpw-contextmenu .cpw-contextmenu-divider {
+  margin: 4px 0;
+  height: 1px;
   background-color: var(--jp-layout-color2);
 }

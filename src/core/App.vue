@@ -1,12 +1,50 @@
 <template>
   <div class="cpw-renderer">
-    <div class="cpw-dnd">
-      <!--  -->
+    <!-- eslint-disable vue/no-v-html -->
+    <div class="cpw-toolbar">
+      <t-button
+        v-for="btn, i in toolbarBtns"
+        :key="i"
+        :title="btn.title"
+        :disabled="btn.disabled"
+        size="small"
+        variant="text"
+        shape="square"
+      >
+        <template #icon>
+          <span
+            class="t-icon"
+            style="font-size: 16px;"
+            v-html="btn.icon"
+          />
+        </template>
+      </t-button>
+
+      <t-button
+        style="margin-left: auto;"
+        title="内核状态"
+        size="small"
+        variant="text"
+        :content="kernelStatusLabel[kernelStatus]"
+      >
+        <template #icon>
+          <span
+            class="t-icon"
+            style="font-size: 16px;"
+            v-html="btnIcons.kernel"
+          />
+        </template>
+      </t-button>
     </div>
-    <div
-      ref="graphDom"
-      style="height: 100%; width: 100%;"
-    />
+    <div class="cpw-graph">
+      <div class="cpw-dnd">
+      <!--  -->
+      </div>
+      <div
+        ref="graphDom"
+        style="height: 100%; width: 100%;"
+      />
+    </div>
     <Teleport to="body">
       <div
         v-if="contextMenu.visible"
@@ -14,47 +52,42 @@
         class="cpw-contextmenu lm-Menu"
         :style="`--jp-border-width: 1px; left: ${contextMenu.x}px; top: ${contextMenu.y}px`"
       >
-        <div
-          v-for="item in contextMenu.items"
-          :key="item.label"
-          class="cpw-contextmenu-item"
-          :style="`--item-height: ${contextMenuItemHeight}px; item-width: ${contextMenuItemWidth}px`"
-          @click="e => { item.onClick(e); contextMenu.visible = false }"
+        <template
+          v-for="item, i in contextMenu.items"
+          :key="i"
         >
-          {{ item.label }}
-        </div>
+          <div
+            v-if="item.divider"
+            class="cpw-contextmenu-divider"
+          />
+          <div
+            v-else
+            class="cpw-contextmenu-item"
+            :style="`--item-height: ${contextMenuItemHeight}px; --item-width: ${contextMenuItemWidth}px`"
+            :title="item.label"
+            @click="e => { item.onClick?.(e); contextMenu.visible = false }"
+          >
+            <div
+              class="cpw-contextmenu-item-icon"
+              :style="`--item-icon-size: ${Math.floor(contextMenuItemHeight * 0.67)}px`"
+              v-html="btnIcons[item.icon!] || ''"
+            />
+            <div class="cpw-contextmenu-item-label">{{ item.label }}</div>
+          </div>
+        </template>
       </div>
     </Teleport>
-    <!-- <ContextMenu v-if="contextMenu" /> -->
-    <!-- <div /> -->
-    <!-- <button @click="run">run</button>
-    <div>{{ kernelStatus }}</div>
-    <div
-      v-for="cell in cells"
-      :key="cell.id"
-      style="margin: 20px;"
-    >
-      <hr />
-      <div>{{ cell.status }}</div>
-      <textarea
-        v-model="cell.source"
-        @input="contentChange"
-      />
-      <template v-if="cell.status !== 'running' && cell.node">
-        <hr />
-        <button @click="showOutput(cell)">show output</button>
-        <div :id="cell.id" />
-      </template>
-    </div> -->
   </div>
 </template>
 
 <script lang="ts" setup>
-import { getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
-import { dispatchAction } from './actionEvent'
+import { computed, getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
+import { dispatchAction, btnIcons, kernelStatusLabel } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Graph, Cell } from '@antv/x6'
-import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth } from './graph'
+import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './graph'
+import { Button as TButton } from 'tdesign-vue-next'
+// import { throttle } from 'lodash-es'
 
 const props = defineProps<{
   id: string
@@ -71,49 +104,73 @@ const contextMenu = ref({
   visible: false,
   x: 0,
   y: 0,
-  items: [] as CPW.ContextMenuItem[],
+  items: [] as ContextMenuItem[],
 })
 
-const showMenu = (e: { clientX: number, clientY: number }, items: CPW.ContextMenuItem[]) => {
+const showMenu = (e: { clientX: number, clientY: number }, items: ContextMenuItem[]) => {
   contextMenu.value = {
     items,
     visible: true,
-    ...getContextMenuPosition(items.length, { x: e.clientX, y: e.clientY }),
+    ...getContextMenuPosition(items, { x: e.clientX, y: e.clientY }),
   }
 }
 
 let graph: Graph
 
+const activeNodeId = ref('')
+const clearActive = () => {
+  if (!activeNodeId.value) return
+  updateCellData(activeNodeId.value, { active: false })
+  activeNodeId.value = ''
+}
+
 onMounted(() => {
   graph = initGraph(graphDom.value!)
 
-  graph.on('node:click', (e) => {
-    if (e.node.shape !== 'cpw-cell-node') return
-    if (e.node.getData().active) return
-    graph.getNodes().forEach(node => {
-      if (e.node.shape !== 'cpw-cell-node') return
-      updateCellData(node, { active: false })
-      // todo 更新outputs
-    })
-    updateCellData(e.node, { active: true })
+  // * ----- 单选激活节点 ------
+  graph.on('blank:click', () => clearActive())
+  graph.on('cell:click', (e) => {
+    if (e.cell.shape !== 'cpw-cell-node') {
+      clearActive()
+      return
+    }
+    if (activeNodeId.value === e.cell.id) return
+    clearActive()
+    updateCellData(e.cell, { active: true })
+    activeNodeId.value = e.cell.id
+    // todo 更新outputs
   })
 
+  // todo: node:dbclick打开outputs抽屉
+
+  // * ----- 右键菜单 ------
   graph.on('blank:contextmenu', ({ e }) => {
-    showMenu(e, [{ label: '运行所有', onClick: () => run('all') }])
+    showMenu(
+      e,
+      [
+        { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
+        { divider: true },
+        { label: '清除所有节点输出', onClick: () => '' },
+      ],
+    )
   })
 
   graph.on('edge:contextmenu', ({ e, edge }) => {
-    showMenu(e, [{ label: '删除连接', onClick: () => delCell(edge) }])
+    showMenu(e, [{ label: '删除连接', icon: 'delete', onClick: () => delCell(edge) }])
   })
 
   graph.on('node:contextmenu', ({ e, node }) => {
     showMenu(
       e,
       [
-        { label: '运行节点', onClick: () => run('single', node.id) },
-        { label: '运行至所选节点', onClick: () => run('to-current', node.id) },
-        { label: '运行所有', onClick: () => run('all') },
-        { label: '删除节点', onClick: () => delCell(node) },
+        { label: '运行节点', icon: 'runSignal', onClick: () => run('single', node.id) },
+        { label: '运行至所选节点', icon: 'runToCurrent', onClick: () => run('to-current', node.id) },
+        { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
+        { divider: true },
+        { label: '清除节点输出', onClick: () => '' },
+        { label: '清除所有节点输出', onClick: () => '' },
+        { divider: true },
+        { label: '删除节点', icon: 'delete', onClick: () => delCell(node) },
       ],
     )
   })
@@ -123,31 +180,29 @@ onMounted(() => {
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 100,
-    y: 600,
+    x: 0,
+    y: 50,
     data: { status: 'done', name: '123' } as CPW.Cell,
   })
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 50,
-    y: 500,
-    data: { name: '456' } as CPW.Cell,
+    x: 100,
+    y: 100,
+    data: { name: '456', source: 'print(123)\n' } as CPW.Cell,
   })
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 40,
-    y: 400,
+    x: 50,
+    y: 150,
     data: { name: 'fff' } as CPW.Cell,
   })
-
-  graph.centerContent()
 })
 
 const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>) => {
   const cell = typeof target === 'string' ? graph.getCellById(target) : target
-  if (cell) cell.setData(data, { deep: false })
+  if (cell) cell.setData(data, { deep: false, overwrite: false })
 }
 
 const delCell = (target: string | Cell) => {
@@ -189,13 +244,31 @@ const run = (type: CPW.RunType, id?: string) => {
 //   document.getElementById(cell.id)?.appendChild(cell.node!)
 // }
 
-const contentChange = () => {
-  // const
-  // dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify({ graph: { cells } }) } })
-  dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify({ cells: graph.getCells() }) } })
-}
+// const contentChange = throttle(
+//   () => {
+//     const json = graph.toJSON()
+//     json.cells.forEach(cell => { if (cell.shape === 'cpw-cell-node') delete cell.data.node })
+//     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
+//   },
+//   100,
+// )
+// * ---------------- toolbar --------------------
 
-const kernelStatus = ref<Kernel.Status>('unknown')
+const toolbarBtns = computed(() => {
+  const noActive = !activeNodeId.value
+  return [
+    { title: '保存', icon: btnIcons.save, onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
+    { title: '复制节点', icon: btnIcons.copy, disabled: noActive, onClick: () => '' },
+    { title: '运行节点', icon: btnIcons.runSignal, disabled: noActive, onClick: () => run('single', activeNodeId.value) },
+    { title: '运行至所选', icon: btnIcons.runToCurrent, disabled: noActive, onClick: () => run('to-current', activeNodeId.value) },
+    { title: '运行所有', icon: btnIcons.runAll, onClick: () => run('all') },
+    { title: '中止内核', icon: btnIcons.stop, onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
+    { title: '重启内核', icon: btnIcons.restart, onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
+  ]
+})
+
+// * ------- 内核状态轮询 -------
+const kernelStatus = ref<Kernel.Status>('starting')
 let timer = 0
 const pollKernelStatus = () => {
   clearTimeout(timer)
@@ -205,32 +278,33 @@ const pollKernelStatus = () => {
   }, 100)
 }
 
-const docMouseDown = (e: MouseEvent) => {
+const closeContextMenu = (e: MouseEvent) => {
   if (!contextMenuDom.value?.contains(e.target as any)) contextMenu.value.visible = false
 }
 
 onMounted(() => {
   pollKernelStatus()
-  window.addEventListener('mousedown', docMouseDown)
+  window.addEventListener('mousedown', closeContextMenu)
 })
 
+// * ------- widget事件接收 --------------
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const eventHandlers: Record<CPW.EventType, Function> = {
   cellOutputs ({ id, outputs, node }: CPW.EventPayloadData['cellOutputs']) {
-    if (outputs.length) return
+    // if (outputs.length) return
     updateCellData(id, { outputs, node })
-    contentChange()
+    // contentChange()
   },
   cellStatus ({ id, status }: CPW.EventPayloadData['cellStatus']) {
     updateCellData(id, { status })
-    contentChange()
+    // contentChange()
   },
   kernelStatus (payload: CPW.EventPayloadData['kernelStatus']) {
     kernelStatus.value = payload.status
   },
   dispose () {
     window.removeEventListener(`cpw-event-${props.id}`, listener as any)
-    window.removeEventListener('mousedown', docMouseDown)
+    window.removeEventListener('mousedown', closeContextMenu)
     graph.dispose()
     clearTimeout(timer)
     app?.unmount()

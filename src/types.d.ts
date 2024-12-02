@@ -103,11 +103,6 @@ declare namespace CPW {
   }
 
   // * -------------------
-  export interface ContextMenuItem {
-    label: string
-    onClick: (e: MouseEvent) => any
-  }
-
   /**
    * 运行类型
    * - all 运行所有

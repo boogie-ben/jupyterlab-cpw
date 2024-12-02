@@ -1933,6 +1933,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mdi/js@npm:^7.4.47":
+  version: 7.4.47
+  resolution: "@mdi/js@npm:7.4.47"
+  checksum: 7379aa55e4494cd90e9121f90a6148312121e6b48d262432e33797da2c6c3431aa9da235aaa7c9ba8ef6357d9059c940c7a9f96283a35bfca2f3a9d4d9588650
+  languageName: node
+  linkType: hard
+
 "@microsoft/api-extractor-model@npm:7.30.0":
   version: 7.30.0
   resolution: "@microsoft/api-extractor-model@npm:7.30.0"
@@ -2398,6 +2405,22 @@ __metadata:
   version: 0.0.29
   resolution: "@types/json5@npm:0.0.29"
   checksum: e60b153664572116dfea673c5bda7778dbff150498f44f998e34b5886d8afc47f16799280e4b6e241c0472aef1bc36add771c569c68fc5125fc2ae519a3eb9ac
+  languageName: node
+  linkType: hard
+
+"@types/lodash-es@npm:^4.17.12":
+  version: 4.17.12
+  resolution: "@types/lodash-es@npm:4.17.12"
+  dependencies:
+    "@types/lodash": "*"
+  checksum: 990a99e2243bebe9505cb5ad19fbc172beb4a8e00f9075c99fc06c46c2801ffdb40bc2867271cf580d5f48994fc9fb076ec92cd60a20e621603bf22114e5b077
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:*":
+  version: 4.17.13
+  resolution: "@types/lodash@npm:4.17.13"
+  checksum: d0bf8fbd950be71946e0076b30fd40d492293baea75f05931b6b5b906fd62583708c6229abdb95b30205ad24ce1ed2f48bc9d419364f682320edd03405cc0c7e
   languageName: node
   linkType: hard
 
@@ -6088,9 +6111,11 @@ __metadata:
     "@jupyterlab/ui-components": ^4.3.1
     "@lumino/commands": ^2.3.1
     "@lumino/widgets": ^2.5.0
+    "@mdi/js": ^7.4.47
     "@rushstack/eslint-patch": ^1.10.4
     "@tsconfig/node20": ^20.1.4
     "@types/json-schema": ^7.0.11
+    "@types/lodash-es": ^4.17.12
     "@types/node": ^22.10.0
     "@types/react": ^18.0.26
     "@types/react-addons-linked-state-mixin": ^0.14.22
@@ -6106,6 +6131,7 @@ __metadata:
     eslint-config-prettier: ^8.8.0
     eslint-plugin-prettier: ^5.0.0
     eslint-plugin-vue: ^9.31.0
+    lodash-es: ^4.17.21
     npm-run-all2: ^7.0.1
     prettier: ^3.0.0
     rimraf: ^5.0.1

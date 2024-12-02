@@ -29,14 +29,17 @@ function activate (
 ) {
   const tracker = new WidgetTracker<CPWDocumentWidget>({ namespace: 'cpw' })
 
-  const ob = new MutationObserver(() => {
+  const obcb = () => {
+    console.log(document.body.getAttribute('data-jp-theme-light'))
     if (JSON.parse(document.body.getAttribute('data-jp-theme-light') || 'true')) {
       document.documentElement.removeAttribute('theme-mode')
     } else {
       document.documentElement.setAttribute('theme-mode', 'dark')
     }
-  })
+  }
+  const ob = new MutationObserver(obcb)
   ob.observe(document.body, { attributeFilter: ['data-jp-theme-light'] })
+  obcb() // 有时候会不自动执行，手动执行一次
 
   restorer.restore(tracker, {
     command: 'docmanager:open',
