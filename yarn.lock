@@ -32,6 +32,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@antv/x6-plugin-clipboard@npm:^2.1.6":
+  version: 2.1.6
+  resolution: "@antv/x6-plugin-clipboard@npm:2.1.6"
+  peerDependencies:
+    "@antv/x6": ^2.x
+  checksum: 3fd4ae880a0815b7a31356638df7e32d1c9695b530225de2355374fcc538e6b6ecd14b0fccddfdf9a028e89466076e9946845e8da9db5a06939b319f05a1e14a
+  languageName: node
+  linkType: hard
+
 "@antv/x6-plugin-dnd@npm:^2.1.1":
   version: 2.1.1
   resolution: "@antv/x6-plugin-dnd@npm:2.1.1"
@@ -6094,6 +6103,7 @@ __metadata:
   resolution: "jupyterlab_cpw@workspace:."
   dependencies:
     "@antv/x6": ^2.18.1
+    "@antv/x6-plugin-clipboard": ^2.1.6
     "@antv/x6-plugin-dnd": ^2.1.1
     "@antv/x6-vue-shape": ^2.1.2
     "@jupyterlab/application": ^4.0.0

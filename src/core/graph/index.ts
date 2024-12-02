@@ -3,6 +3,7 @@ import { Dnd } from '@antv/x6-plugin-dnd'
 import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
 import { btnIcons } from '../utils'
+import { Clipboard } from '@antv/x6-plugin-clipboard'
 
 const portAttrs = {
   circle: {
@@ -125,6 +126,8 @@ export const initGraph = (dom: HTMLElement) => {
       min: 0.1,
     },
   })
+
+  graph.use(new Clipboard({ enabled: true }))
 
   graph.on('edge:connected', ({ edge }) => {
     edge.attr({ line: { strokeDasharray: '' } })

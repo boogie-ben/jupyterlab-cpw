@@ -48,6 +48,7 @@
     },
     "dependencies": {
         "@antv/x6": "^2.18.1",
+        "@antv/x6-plugin-clipboard": "^2.1.6",
         "@antv/x6-plugin-dnd": "^2.1.1",
         "@antv/x6-vue-shape": "^2.1.2",
         "@jupyterlab/application": "^4.0.0",

@@ -10,6 +10,7 @@
         size="small"
         variant="text"
         shape="square"
+        @click="btn.onClick"
       >
         <template #icon>
           <span
@@ -150,7 +151,7 @@ onMounted(() => {
       [
         { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
         { divider: true },
-        { label: '清除所有节点输出', onClick: () => '' },
+        { label: '清除所有节点输出', onClick: () => clearOutputs('all') },
       ],
     )
   })
@@ -167,9 +168,10 @@ onMounted(() => {
         { label: '运行至所选节点', icon: 'runToCurrent', onClick: () => run('to-current', node.id) },
         { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
         { divider: true },
-        { label: '清除节点输出', onClick: () => '' },
-        { label: '清除所有节点输出', onClick: () => '' },
+        { label: '清除节点输出', onClick: () => clearOutputs('single', node) },
+        { label: '清除所有节点输出', onClick: () => clearOutputs('all') },
         { divider: true },
+        { label: '复制节点', icon: 'copy', onClick: () => copyCell(node) },
         { label: '删除节点', icon: 'delete', onClick: () => delCell(node) },
       ],
     )
@@ -180,22 +182,22 @@ onMounted(() => {
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 0,
+    x: 200,
     y: 50,
     data: { status: 'done', name: '123' } as CPW.Cell,
   })
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 100,
-    y: 100,
+    x: 250,
+    y: 150,
     data: { name: '456', source: 'print(123)\n' } as CPW.Cell,
   })
 
   graph.addNode({
     shape: 'cpw-cell-node',
-    x: 50,
-    y: 150,
+    x: 350,
+    y: 250,
     data: { name: 'fff' } as CPW.Cell,
   })
 })
@@ -209,6 +211,15 @@ const delCell = (target: string | Cell) => {
   const cell = graph.removeCell(target as any)
   cell?.dispose()
   return cell
+}
+
+const copyCell = (target: string | Cell) => {
+  const cell = typeof target === 'string' ? graph.getCellById(target) : target
+  if (!cell || cell.shape !== 'cpw-cell-node') return
+  graph.copy([cell])
+  const [newCell] = graph.paste()
+  updateCellData(newCell, { outputs: [], active: false, node: undefined, status: 'changed' })
+  graph.cleanClipboard()
 }
 
 const run = (type: CPW.RunType, id?: string) => {
@@ -240,6 +251,17 @@ const run = (type: CPW.RunType, id?: string) => {
   dispatchAction(props.id, { type: 'run', data: { cells: runnerCells } })
 }
 
+const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
+  if (type === 'single' && target) {
+    const cell = typeof target === 'string' ? graph.getCellById(target) : target
+    if (cell) updateCellData(cell, { outputs: [], node: undefined })
+  } else {
+    graph.getCells().forEach(node => {
+      if (node.shape === 'cpw-cell-node') updateCellData(node, { outputs: [], node: undefined })
+    })
+  }
+}
+
 // const showOutput = (cell: CPW.Cell) => {
 //   document.getElementById(cell.id)?.appendChild(cell.node!)
 // }
@@ -253,12 +275,11 @@ const run = (type: CPW.RunType, id?: string) => {
 //   100,
 // )
 // * ---------------- toolbar --------------------
-
 const toolbarBtns = computed(() => {
   const noActive = !activeNodeId.value
   return [
     { title: '保存', icon: btnIcons.save, onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
-    { title: '复制节点', icon: btnIcons.copy, disabled: noActive, onClick: () => '' },
+    { title: '复制节点', icon: btnIcons.copy, disabled: noActive, onClick: () => copyCell(activeNodeId.value) },
     { title: '运行节点', icon: btnIcons.runSignal, disabled: noActive, onClick: () => run('single', activeNodeId.value) },
     { title: '运行至所选', icon: btnIcons.runToCurrent, disabled: noActive, onClick: () => run('to-current', activeNodeId.value) },
     { title: '运行所有', icon: btnIcons.runAll, onClick: () => run('all') },

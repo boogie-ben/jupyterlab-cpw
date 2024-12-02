@@ -6,14 +6,14 @@ export const dispatchAction: CPW.DispatchAction = (id, payload) => {
 }
 
 export const kernelStatusLabel: Record<Kernel.Status, string> = {
-  autorestarting: '重启中',
+  autorestarting: '重启中...',
   busy: '繁忙',
   dead: '已关闭',
   idle: '空闲',
-  restarting: '重启中',
-  starting: '启动中',
-  terminating: '关闭中',
-  unknown: 'unknown',
+  restarting: '重启中...',
+  starting: '启动中...',
+  terminating: '关闭中...',
+  unknown: '连接中...',
 }
 
 const mdiSvg = (path: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="${path}" /></svg>`
