@@ -6,9 +6,14 @@ declare namespace CPW {
   }
 
   export interface Cell {
+    /** 节点id，由graph自动生成 */
     id: string
 
+    /** 节点名称 */
     name: string
+
+    /** 节点类型，也就是左侧组件dnd里源组件key */
+    key: string
 
     /** 节点源代码 */
     source: string

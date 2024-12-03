@@ -1,5 +1,18 @@
 import type { Kernel } from '@jupyterlab/services'
-import { mdiContentSave, mdiPlay, mdiSkipNext, mdiPlayCircle, mdiContentCopy, mdiStop, mdiRefresh, mdiTrashCan, mdiMemory } from '@mdi/js'
+import {
+  mdiContentSave,
+  mdiPlay,
+  mdiSkipNext,
+  mdiPlayCircle,
+  mdiContentCopy,
+  mdiStop,
+  mdiRefresh,
+  mdiTrashCan,
+  mdiMemory,
+  mdiMenuOpen,
+  mdiMenuClose,
+  mdiChevronRight,
+} from '@mdi/js'
 
 export const dispatchAction: CPW.DispatchAction = (id, payload) => {
   window.dispatchEvent(new CustomEvent(`cpw-action-${id}`, { detail: payload }))
@@ -28,4 +41,16 @@ export const btnIcons = {
   restart: mdiSvg(mdiRefresh),
   kernel: mdiSvg(mdiMemory),
   delete: mdiSvg(mdiTrashCan),
+  menuOpen: mdiSvg(mdiMenuOpen),
+  menuClose: mdiSvg(mdiMenuClose),
+  chevronRight: mdiSvg(mdiChevronRight),
+}
+
+export type BtnIcon = keyof typeof btnIcons
+
+export interface ToolbarBtn {
+  title: string
+  icon: BtnIcon
+  disabled?: boolean
+  onClick:(e: MouseEvent) => any
 }

@@ -157,6 +157,7 @@ export const initDnd = (graph: Graph, dndContainer: HTMLElement, draggingContain
     target: graph,
     dndContainer,
     draggingContainer,
+    scaled: true,
   })
 
   return dnd

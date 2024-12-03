@@ -1,51 +1,52 @@
 <template>
-  <div class="cpw-renderer">
+  <div class="cpw-container">
     <!-- eslint-disable vue/no-v-html -->
-    <div class="cpw-toolbar">
-      <t-button
-        v-for="btn, i in toolbarBtns"
-        :key="i"
-        :title="btn.title"
-        :disabled="btn.disabled"
-        size="small"
-        variant="text"
-        shape="square"
-        @click="btn.onClick"
-      >
-        <template #icon>
-          <span
-            class="t-icon"
-            style="font-size: 16px;"
-            v-html="btn.icon"
-          />
-        </template>
-      </t-button>
+    <Toolbar
+      :btns="toolbarBtns"
+      :kernel-status="kernelStatus"
+    />
 
-      <t-button
-        style="margin-left: auto;"
-        title="内核状态"
-        size="small"
-        variant="text"
-        :content="kernelStatusLabel[kernelStatus]"
+    <div class="cpw-graph-warpper">
+      <div
+        ref="dndDom"
+        :class="['cpw-dnd', dndCollapsed && 'cpw-dnd-collapsed']"
       >
-        <template #icon>
-          <span
-            class="t-icon"
-            style="font-size: 16px;"
-            v-html="btnIcons.kernel"
-          />
+        <template
+          v-for="cate in nodeCategory"
+          :key="cate.id"
+        >
+          <div
+            class="cpw-dnd-category"
+            :title="cate.name"
+            @click="toogleExpand(cate.id)"
+          >
+            <div
+              class="cpw-dnd-category-icon"
+              :expanded="dndExpanded[cate.id]"
+              v-html="btnIcons.chevronRight"
+            />
+            <div class="cpw-dnd-category-label">{{ cate.name }}</div>
+          </div>
+          <template v-if="dndExpanded[cate.id]">
+            <div
+              v-for="item in cate.children"
+              :key="item.key"
+              class="cpw-dnd-component"
+              :title="item.name"
+              @mousedown="e => startDrag(e, item)"
+            >
+              {{ item.name }}
+            </div>
+          </template>
         </template>
-      </t-button>
-    </div>
-    <div class="cpw-graph">
-      <div class="cpw-dnd">
-      <!--  -->
       </div>
+
       <div
         ref="graphDom"
-        style="height: 100%; width: 100%;"
+        class="cpw-graph"
       />
     </div>
+
     <Teleport to="body">
       <div
         v-if="contextMenu.visible"
@@ -82,13 +83,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
-import { dispatchAction, btnIcons, kernelStatusLabel } from './utils'
+import { computed, getCurrentInstance, onMounted, reactive, ref, shallowRef } from 'vue'
+import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Graph, Cell } from '@antv/x6'
-import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './graph'
-import { Button as TButton } from 'tdesign-vue-next'
+import { initGraph, initDnd, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
 // import { throttle } from 'lodash-es'
+import { nodeCategory, type NodeComponent } from './Dnd/utils'
+import Toolbar from './Toolbar/index.vue'
+import { Dnd } from '@antv/x6-plugin-dnd'
 
 const props = defineProps<{
   id: string
@@ -98,8 +101,6 @@ const props = defineProps<{
 const app = getCurrentInstance()?.appContext.app
 
 const contextMenuDom = shallowRef<HTMLDivElement>()
-
-const graphDom = shallowRef<HTMLDivElement>()
 
 const contextMenu = ref({
   visible: false,
@@ -116,18 +117,30 @@ const showMenu = (e: { clientX: number, clientY: number }, items: ContextMenuIte
   }
 }
 
+const graphDom = shallowRef<HTMLDivElement>()
 let graph: Graph
+let dnd: Dnd
 
-const activeNodeId = ref('')
-const clearActive = () => {
-  if (!activeNodeId.value) return
-  updateCellData(activeNodeId.value, { active: false })
-  activeNodeId.value = ''
+const dndDom = ref<HTMLDivElement>()
+const dndCollapsed = ref(false)
+const dndExpanded = reactive<Record<string, boolean>>({})
+const toogleExpand = (id: string) => {
+  if (dndExpanded[id]) delete dndExpanded[id]
+  else dndExpanded[id] = true
+}
+
+const startDrag = (e: MouseEvent, item: NodeComponent) => {
+  const { key, name, source } = item
+  const node = graph.createNode({
+    shape: 'cpw-cell-node',
+    data: { key, name, source } as CPW.Cell,
+  })
+  dnd.start(node, e)
 }
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
-
+  dnd = initDnd(graph, dndDom.value!, graphDom.value!)
   // * ----- 单选激活节点 ------
   graph.on('blank:click', () => clearActive())
   graph.on('cell:click', (e) => {
@@ -202,6 +215,13 @@ onMounted(() => {
   })
 })
 
+const activeNodeId = ref('')
+const clearActive = () => {
+  if (!activeNodeId.value) return
+  updateCellData(activeNodeId.value, { active: false })
+  activeNodeId.value = ''
+}
+
 const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>) => {
   const cell = typeof target === 'string' ? graph.getCellById(target) : target
   if (cell) cell.setData(data, { deep: false, overwrite: false })
@@ -260,6 +280,7 @@ const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
       if (node.shape === 'cpw-cell-node') updateCellData(node, { outputs: [], node: undefined })
     })
   }
+  // todo 清除输出抽屉
 }
 
 // const showOutput = (cell: CPW.Cell) => {
@@ -275,16 +296,19 @@ const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
 //   100,
 // )
 // * ---------------- toolbar --------------------
-const toolbarBtns = computed(() => {
+const toolbarBtns = computed<ToolbarBtn[]>(() => {
   const noActive = !activeNodeId.value
   return [
-    { title: '保存', icon: btnIcons.save, onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
-    { title: '复制节点', icon: btnIcons.copy, disabled: noActive, onClick: () => copyCell(activeNodeId.value) },
-    { title: '运行节点', icon: btnIcons.runSignal, disabled: noActive, onClick: () => run('single', activeNodeId.value) },
-    { title: '运行至所选', icon: btnIcons.runToCurrent, disabled: noActive, onClick: () => run('to-current', activeNodeId.value) },
-    { title: '运行所有', icon: btnIcons.runAll, onClick: () => run('all') },
-    { title: '中止内核', icon: btnIcons.stop, onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
-    { title: '重启内核', icon: btnIcons.restart, onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
+    dndCollapsed.value
+      ? { title: '展开组件列表', icon: 'menuClose', onClick: () => { dndCollapsed.value = false } }
+      : { title: '收起组件列表', icon: 'menuOpen', onClick: () => { dndCollapsed.value = true } },
+    { title: '保存', icon: 'save', onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
+    { title: '复制节点', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeNodeId.value) },
+    { title: '运行节点', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeNodeId.value) },
+    { title: '运行至所选', icon: 'runToCurrent', disabled: noActive, onClick: () => run('to-current', activeNodeId.value) },
+    { title: '运行所有', icon: 'runAll', onClick: () => run('all') },
+    { title: '中止内核', icon: 'stop', onClick: () => dispatchAction(props.id, { type: 'kernelInterrupt', data: null }) },
+    { title: '重启内核', icon: 'restart', onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
   ]
 })
 

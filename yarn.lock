@@ -6156,6 +6156,7 @@ __metadata:
     stylelint-prettier: ^4.0.0
     tdesign-vue-next: ^1.10.4
     typescript: ^5.7.2
+    uuid: ^11.0.3
     vite: 5.4.11
     vite-plugin-dts: ^4.3.0
     vue: ^3.5.13
@@ -9027,6 +9028,15 @@ __metadata:
   version: 3.11.0
   resolution: "utility-types@npm:3.11.0"
   checksum: 35a4866927bbea5d037726744028d05c6e37772ded2aabaca21480ce9380185436aef586ead525e327c7f3c640b1a3287769a12ef269c7b165a2ddd50ea6ad61
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^11.0.3":
+  version: 11.0.3
+  resolution: "uuid@npm:11.0.3"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 646181c77e8b8df9bd07254faa703943e1c4d5ccde7d080312edf12f443f6c5750801fd9b27bf2e628594182165e6b1b880c0382538f7eca00b26622203741dc
   languageName: node
   linkType: hard
 
