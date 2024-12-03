@@ -61,6 +61,7 @@ import { Graph, Cell } from '@antv/x6'
 import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
 // import { throttle } from 'lodash-es'
 import Toolbar from './Toolbar/index.vue'
+import { useThrottleFn } from '@vueuse/core'
 // import { Dnd } from '@antv/x6-plugin-dnd'
 import Dnd from './Dnd/index.vue'
 
@@ -98,6 +99,13 @@ onMounted(() => {
   graph = initGraph(graphDom.value!)
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
+
+  graph.on('node:added', fileChange)
+  graph.on('node:moved', fileChange)
+  graph.on('cell:removed', fileChange)
+  graph.on('edge:connected', fileChange)
+  graph.on('node:change:data', fileChange)
+
   // * ----- 单选激活节点 ------
   graph.on('blank:click', () => clearActive())
   graph.on('cell:click', (e) => {
@@ -151,6 +159,7 @@ onMounted(() => {
   graph.fromJSON({ cells: props.fileContent.cells })
 })
 
+// * ------------------- 节点操作 -------------------
 const activeNodeId = ref('')
 const clearActive = () => {
   if (!activeNodeId.value) return
@@ -223,14 +232,20 @@ const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
 //   document.getElementById(cell.id)?.appendChild(cell.node!)
 // }
 
-// const contentChange = throttle(
-//   () => {
-//     const json = graph.toJSON()
-//     json.cells.forEach(cell => { if (cell.shape === 'cpw-cell-node') delete cell.data.node })
-//     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
-//   },
-//   100,
-// )
+const fileChange = useThrottleFn(
+  () => {
+    const json = graph.toJSON()
+    json.cells.forEach(cell => {
+      if (cell.shape === 'cpw-cell-node') {
+        delete cell.data.node
+        cell.data.active = false
+      }
+    })
+    dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
+  },
+  100,
+)
+
 // * ---------------- toolbar --------------------
 const toolbarBtns = computed<ToolbarBtn[]>(() => {
   const noActive = !activeNodeId.value

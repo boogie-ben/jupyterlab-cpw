@@ -17,9 +17,8 @@
         theme="primary"
         variant="text"
         shape="square"
-        style="font-size: 20px"
       >
-        <template #icon><PlusIcon /></template>
+        <template #icon><PlusIcon size="20px" /></template>
       </t-button>
     </div>
     <template
