@@ -12,6 +12,14 @@
     所以dnd拖拽时会把临时cell渲染在body里，而不是cpw-container，所以只能把css变量设定在全局
     并且cell的样式需要兼容在body和在画布中一致
 */
+
+:root {
+  --td-font-size-body-medium: 13px;
+  --td-font-size-link-medium: 13px;
+  --td-font-size-mark-medium: 13px;
+  --td-font-size-title-small: 13px;
+}
+
 /* .cpw-container { */
 :root {
   --grid-bg-color: #f3f3f3;
@@ -54,6 +62,7 @@
   box-sizing: border-box;
   height: 100%;
   width: 100%;
+
   --toolbar-height: 33px;
   /* --toolbar-height: 41px; */
 }
@@ -212,8 +221,8 @@
   height: var(--item-height, 24px);
   line-height: var(--item-height, 24px);
   width: var(--item-width, 150px);
-
 }
+
 .cpw-contextmenu .cpw-contextmenu-item:hover {
   background-color: var(--jp-layout-color2);
 }

@@ -7,39 +7,10 @@
     />
 
     <div class="cpw-graph-warpper">
-      <div
-        ref="dndDom"
-        :class="['cpw-dnd', dndCollapsed && 'cpw-dnd-collapsed']"
-      >
-        <template
-          v-for="cate in nodeCategory"
-          :key="cate.id"
-        >
-          <div
-            class="cpw-dnd-category"
-            :title="cate.name"
-            @click="toogleExpand(cate.id)"
-          >
-            <div
-              class="cpw-dnd-category-icon"
-              :expanded="dndExpanded[cate.id]"
-              v-html="btnIcons.chevronRight"
-            />
-            <div class="cpw-dnd-category-label">{{ cate.name }}</div>
-          </div>
-          <template v-if="dndExpanded[cate.id]">
-            <div
-              v-for="item in cate.children"
-              :key="item.key"
-              class="cpw-dnd-component"
-              :title="item.name"
-              @mousedown="e => startDrag(e, item)"
-            >
-              {{ item.name }}
-            </div>
-          </template>
-        </template>
-      </div>
+      <Dnd
+        ref="dndRef"
+        :collapsed="dndCollapsed"
+      />
 
       <div
         ref="graphDom"
@@ -83,14 +54,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance, onMounted, reactive, ref, shallowRef } from 'vue'
-import { dispatchAction, btnIcons, type ToolbarBtn, nodeCategory, type NodeComponent } from './utils'
+import { computed, getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
+import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Graph, Cell } from '@antv/x6'
-import { initGraph, initDnd, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
+import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
 // import { throttle } from 'lodash-es'
 import Toolbar from './Toolbar/index.vue'
-import { Dnd } from '@antv/x6-plugin-dnd'
+// import { Dnd } from '@antv/x6-plugin-dnd'
+import Dnd from './Dnd/index.vue'
 
 const props = defineProps<{
   id: string
@@ -118,28 +90,14 @@ const showMenu = (e: { clientX: number, clientY: number }, items: ContextMenuIte
 
 const graphDom = shallowRef<HTMLDivElement>()
 let graph: Graph
-let dnd: Dnd
 
-const dndDom = ref<HTMLDivElement>()
+const dndRef = shallowRef<InstanceType<typeof Dnd>>()
 const dndCollapsed = ref(false)
-const dndExpanded = reactive<Record<string, boolean>>({})
-const toogleExpand = (id: string) => {
-  if (dndExpanded[id]) delete dndExpanded[id]
-  else dndExpanded[id] = true
-}
-
-const startDrag = (e: MouseEvent, item: NodeComponent) => {
-  const { key, name, source } = item
-  const node = graph.createNode({
-    shape: 'cpw-cell-node',
-    data: { key, name, source } as CPW.Cell,
-  })
-  dnd.start(node, e)
-}
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
-  dnd = initDnd(graph, dndDom.value!)
+  dndRef.value!.init(graph)
+  // dnd = initDnd(graph, dndDom.value!)
   // * ----- 单选激活节点 ------
   graph.on('blank:click', () => clearActive())
   graph.on('cell:click', (e) => {
