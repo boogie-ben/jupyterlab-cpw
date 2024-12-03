@@ -152,11 +152,11 @@ export const initGraph = (dom: HTMLElement) => {
   return graph
 }
 
-export const initDnd = (graph: Graph, dndContainer: HTMLElement, draggingContainer: HTMLElement) => {
+export const initDnd = (graph: Graph, dndContainer: HTMLElement) => {
   const dnd = new Dnd({
     target: graph,
     dndContainer,
-    draggingContainer,
+    // draggingContainer, // dnd配置draggingContainer有bug https://github.com/antvis/X6/issues/3978
     scaled: true,
   })
 

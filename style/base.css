@@ -4,6 +4,14 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
+/*
+    dnd配置draggingContainer有bug
+    https://github.com/antvis/X6/issues/3978
+    有pr修复了但是dnd插件没有发布新版，懒得在本地patch修复了
+
+    所以dnd拖拽时会把临时cell渲染在body里，而不是cpw-container，所以只能把css变量设定在全局
+    并且cell的样式需要兼容在body和在画布中一致
+*/
 /* .cpw-container { */
 :root {
   --grid-bg-color: #f3f3f3;
@@ -15,6 +23,12 @@
 
   --line-color: #999;
   --line-hover-color: #0052d9;
+
+  --dnd-bg-color: #fff;
+  --dnd-category-bg-color: #ededed;
+  --dnd-component-bg-color: #fff;
+  --dnd-highlight-bg-color: #f3f3f3;
+  --dnd-item-border-color: #eee;
 }
 
 :root[theme-mode=dark] {
@@ -28,6 +42,12 @@
 
   --line-color: #acacac;
   --line-hover-color: #4582e6;
+
+  --dnd-bg-color: #111;
+  --dnd-category-bg-color: #212121;
+  --dnd-component-bg-color: #181818;
+  --dnd-highlight-bg-color: transparent;
+  --dnd-item-border-color: #424242;
 }
 
 .cpw-container {
@@ -60,9 +80,15 @@
   height: calc(100% - var(--toolbar-height));
 }
 
-.cpw-dnd {
+.cpw-graph {
+  flex: 1;
   height: 100%;
+}
+
+/* ----------------- dnd样式 -------------------- */
+.cpw-dnd {
   flex-shrink: 0;
+  height: 100%;
   width: var(--dnd-width, 181px);
   border-right: 1px solid var(--jp-toolbar-border-color);
   overflow-y: auto;
@@ -70,6 +96,7 @@
   font-size: 12px;
   transition: width 200ms;
   user-select: none;
+  background-color: var(--dnd-bg-color);
 }
 
 .cpw-dnd.cpw-dnd-collapsed {
@@ -78,9 +105,10 @@
 
 .cpw-dnd .cpw-dnd-category,
 .cpw-dnd .cpw-dnd-component {
-  height: 32px;
+  height: 33px;
   line-height: 32px;
-  margin-bottom: 1px;
+  /* margin-bottom: 1px; */
+  border-bottom: 1px solid var(--dnd-item-border-color);
   cursor: pointer;
 }
 
@@ -89,7 +117,7 @@
   align-items: center;
   column-gap: 4px;
   padding: 0 8px 0 4px;
-  background-color: var(--cell-bg-color);
+  background-color: var(--dnd-category-bg-color);
 }
 
 .cpw-dnd .cpw-dnd-category .cpw-dnd-category-icon {
@@ -115,19 +143,16 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  background-color: var(--grid-bg-color);
+  background-color: var(--dnd-component-bg-color);
 }
 
 .cpw-dnd .cpw-dnd-component:hover {
-  background-color: transparent;
+  background-color: var(--dnd-highlight-bg-color);
 }
 
-.cpw-graph {
-  flex: 1;
-  height: 100%;
-}
-
+/* --------------- 节点样式。需要兼容dnd在拖拽时，临时节点会挂载在body里 ------------- */
 .cpw-cell-node {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -138,6 +163,10 @@
   border-radius: 6px;
   background-color: var(--cell-bg-color);
   cursor: auto;
+}
+
+.cpw-cell-node * {
+  box-sizing: border-box;
 }
 
 .cpw-cell-node.cpw-cell-node-active {
@@ -163,6 +192,7 @@
   width: 24px;
 }
 
+/* 右键菜单样式，右键菜单挂载在body上 */
 .cpw-contextmenu {
   position: absolute;
   box-sizing: border-box;

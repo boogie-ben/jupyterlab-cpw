@@ -84,12 +84,11 @@
 
 <script lang="ts" setup>
 import { computed, getCurrentInstance, onMounted, reactive, ref, shallowRef } from 'vue'
-import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
+import { dispatchAction, btnIcons, type ToolbarBtn, nodeCategory, type NodeComponent } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Graph, Cell } from '@antv/x6'
 import { initGraph, initDnd, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
 // import { throttle } from 'lodash-es'
-import { nodeCategory, type NodeComponent } from './Dnd/utils'
 import Toolbar from './Toolbar/index.vue'
 import { Dnd } from '@antv/x6-plugin-dnd'
 
@@ -140,7 +139,7 @@ const startDrag = (e: MouseEvent, item: NodeComponent) => {
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
-  dnd = initDnd(graph, dndDom.value!, graphDom.value!)
+  dnd = initDnd(graph, dndDom.value!)
   // * ----- 单选激活节点 ------
   graph.on('blank:click', () => clearActive())
   graph.on('cell:click', (e) => {
@@ -192,27 +191,6 @@ onMounted(() => {
 
   // 整个fileContent会在初始化时传入，并且不会变更，只有vue应用会单向往widget传递最新的fileContnet
   graph.fromJSON({ cells: props.fileContent.cells })
-
-  graph.addNode({
-    shape: 'cpw-cell-node',
-    x: 200,
-    y: 50,
-    data: { status: 'done', name: '123' } as CPW.Cell,
-  })
-
-  graph.addNode({
-    shape: 'cpw-cell-node',
-    x: 250,
-    y: 150,
-    data: { name: '456', source: 'print(123)\n' } as CPW.Cell,
-  })
-
-  graph.addNode({
-    shape: 'cpw-cell-node',
-    x: 350,
-    y: 250,
-    data: { name: 'fff' } as CPW.Cell,
-  })
 })
 
 const activeNodeId = ref('')
