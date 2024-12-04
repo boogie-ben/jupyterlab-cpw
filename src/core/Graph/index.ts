@@ -158,6 +158,8 @@ export const initDnd = (graph: Graph, dndContainer: HTMLElement) => {
     dndContainer,
     // draggingContainer, // dnd配置draggingContainer有bug https://github.com/antvis/X6/issues/3978
     scaled: true,
+    getDragNode: (node) => node.clone({ keepId: true }),
+    getDropNode: (node) => node.clone({ keepId: true }),
   })
 
   return dnd

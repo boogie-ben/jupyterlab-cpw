@@ -33,7 +33,7 @@
   --line-hover-color: #0052d9;
 
   --dnd-bg-color: #fff;
-  --dnd-category-bg-color: #ededed;
+  --dnd-category-bg-color: #fff;
   --dnd-component-bg-color: #fff;
   --dnd-highlight-bg-color: #f3f3f3;
   --dnd-item-border-color: #eee;
@@ -64,6 +64,7 @@
   width: 100%;
 
   --toolbar-height: 33px;
+  --dnd-width: 181px;
   /* --toolbar-height: 41px; */
 }
 
@@ -85,6 +86,7 @@
 }
 
 .cpw-graph-warpper {
+  position: relative;
   display: flex;
   height: calc(100% - var(--toolbar-height));
 }
@@ -98,7 +100,7 @@
 .cpw-dnd {
   flex-shrink: 0;
   height: 100%;
-  width: var(--dnd-width, 181px);
+  width: var(--dnd-width);
   border-right: 1px solid var(--jp-toolbar-border-color);
   overflow-y: auto;
   overflow-x: hidden;
@@ -201,7 +203,7 @@
   width: 24px;
 }
 
-/* 右键菜单样式，右键菜单挂载在body上 */
+/* ------------------- 右键菜单样式，右键菜单挂载在body上 ------------ */
 .cpw-contextmenu {
   position: absolute;
   box-sizing: border-box;
@@ -249,4 +251,56 @@
   margin: 4px 0;
   height: 1px;
   background-color: var(--jp-layout-color2);
+}
+
+/* ------------------- outputs渲染抽屉 -----------------------*/
+.cpw-outputs {
+  --header-height: 32px;
+  /* --resize-height: 200px; */
+  position: absolute;
+  bottom: 0;
+  left: var(--dnd-width);
+  right: 0;
+  border-top: 1px solid var(--jp-toolbar-border-color);
+  max-height: 100%;
+  min-height: calc(var(--header-height) + 1px);
+  height: calc(var(--header-height) + 1px);
+}
+
+.cpw-outputs[expanded=true] {
+  height: calc(var(--resize-height, 200px) + 1px);
+}
+
+.cpw-outputs .cpw-outputs-header {
+  height: var(--header-height);
+  padding-bottom: 4px;
+  background-color: var(--jp-toolbar-background);
+}
+
+.cpw-outputs .cpw-outputs-header .cpw-outputs-header-resizer {
+  height: 4px;
+}
+
+.cpw-outputs[expanded=true] .cpw-outputs-header .cpw-outputs-header-resizer {
+  cursor: ns-resize;
+}
+
+.cpw-outputs .cpw-outputs-header .cpw-outputs-header-content {
+  display: flex;
+  align-items: center;
+  height: calc(100% - 4px);
+  padding: 0 8px;
+  column-gap: 16px;
+}
+
+.cpw-outputs .cpw-outputs-render {
+  display: none;
+  height: calc(100% - 28px);
+  padding: 16px;
+  background-color: var(--jp-layout-color0);
+  overflow: auto;
+}
+
+.cpw-outputs[expanded=true] .cpw-outputs-render {
+  display: block;
 }

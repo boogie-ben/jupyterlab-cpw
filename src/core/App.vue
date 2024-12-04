@@ -16,6 +16,8 @@
         ref="graphDom"
         class="cpw-graph"
       />
+
+      <Outputs :active-cell="activeCell" />
     </div>
 
     <Teleport to="body">
@@ -64,6 +66,7 @@ import Toolbar from './Toolbar/index.vue'
 import { useThrottleFn } from '@vueuse/core'
 // import { Dnd } from '@antv/x6-plugin-dnd'
 import Dnd from './Dnd/index.vue'
+import Outputs from './Outputs/index.vue'
 
 const props = defineProps<{
   id: string
@@ -104,21 +107,12 @@ onMounted(() => {
   graph.on('node:moved', fileChange)
   graph.on('cell:removed', fileChange)
   graph.on('edge:connected', fileChange)
-  graph.on('node:change:data', fileChange)
+  /** 因为graph.fromJSON会触发这个node:change:data事件导致一打开文件就是修改状态，data变更的fileChange改为在updateCellData中调用 */
+  // graph.on('node:change:data', fileChange)
 
   // * ----- 单选激活节点 ------
-  graph.on('blank:click', () => clearActive())
-  graph.on('cell:click', (e) => {
-    if (e.cell.shape !== 'cpw-cell-node') {
-      clearActive()
-      return
-    }
-    if (activeNodeId.value === e.cell.id) return
-    clearActive()
-    updateCellData(e.cell, { active: true })
-    activeNodeId.value = e.cell.id
-    // todo 更新outputs
-  })
+  graph.on('blank:click', () => setActive(null))
+  graph.on('cell:click', (e) => e.cell.shape === 'cpw-cell-node' ? setActive(e.cell) : setActive(null))
 
   // todo: node:dbclick打开outputs抽屉
 
@@ -160,16 +154,29 @@ onMounted(() => {
 })
 
 // * ------------------- 节点操作 -------------------
-const activeNodeId = ref('')
-const clearActive = () => {
-  if (!activeNodeId.value) return
-  updateCellData(activeNodeId.value, { active: false })
-  activeNodeId.value = ''
+// const activeNodeId = ref('')
+const activeCell = shallowRef<CPW.Cell | null>(null)
+
+const setActive = (target: string | Cell | null) => {
+  if (target) {
+    const cell = typeof target === 'string' ? graph.getCellById(target) : target
+    if (cell?.shape !== 'cpw-cell-node') return
+    if (activeCell.value && activeCell.value?.id !== cell.id) updateCellData(activeCell.value.id, { active: false })
+    updateCellData(cell, { active: true })
+    activeCell.value = { ...cell.getData() as CPW.Cell }
+  } else {
+    if (!activeCell.value) return
+    updateCellData(activeCell.value.id, { active: false })
+    activeCell.value = null
+  }
 }
 
 const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>) => {
   const cell = typeof target === 'string' ? graph.getCellById(target) : target
-  if (cell) cell.setData(data, { deep: false, overwrite: false })
+  if (!cell) return
+  cell.setData(data, { deep: false, overwrite: false })
+  if (activeCell.value?.id === cell.id) activeCell.value = { ...cell.getData() as CPW.Cell }
+  fileChange()
 }
 
 const delCell = (target: string | Cell) => {
@@ -225,12 +232,7 @@ const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
       if (node.shape === 'cpw-cell-node') updateCellData(node, { outputs: [], node: undefined })
     })
   }
-  // todo 清除输出抽屉
 }
-
-// const showOutput = (cell: CPW.Cell) => {
-//   document.getElementById(cell.id)?.appendChild(cell.node!)
-// }
 
 const fileChange = useThrottleFn(
   () => {
@@ -248,15 +250,15 @@ const fileChange = useThrottleFn(
 
 // * ---------------- toolbar --------------------
 const toolbarBtns = computed<ToolbarBtn[]>(() => {
-  const noActive = !activeNodeId.value
+  const noActive = !activeCell.value
   return [
     dndCollapsed.value
       ? { title: '展开组件列表', icon: 'menuClose', onClick: () => { dndCollapsed.value = false } }
       : { title: '收起组件列表', icon: 'menuOpen', onClick: () => { dndCollapsed.value = true } },
     { title: '保存', icon: 'save', onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
-    { title: '复制节点', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeNodeId.value) },
-    { title: '运行节点', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeNodeId.value) },
-    { title: '运行至所选', icon: 'runToCurrent', disabled: noActive, onClick: () => run('to-current', activeNodeId.value) },
+    { title: '复制节点', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeCell.value!.id) },
+    { title: '运行节点', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeCell.value!.id) },
+    { title: '运行至所选', icon: 'runToCurrent', disabled: noActive, onClick: () => run('to-current', activeCell.value!.id) },
     { title: '运行所有', icon: 'runAll', onClick: () => run('all') },
     { title: '中止内核', icon: 'stop', onClick: () => dispatchAction(props.id, { type: 'kernelInterrupt', data: null }) },
     { title: '重启内核', icon: 'restart', onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
@@ -287,13 +289,10 @@ onMounted(() => {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const eventHandlers: Record<CPW.EventType, Function> = {
   cellOutputs ({ id, outputs, node }: CPW.EventPayloadData['cellOutputs']) {
-    // if (outputs.length) return
     updateCellData(id, { outputs, node })
-    // contentChange()
   },
   cellStatus ({ id, status }: CPW.EventPayloadData['cellStatus']) {
     updateCellData(id, { status })
-    // contentChange()
   },
   kernelStatus (payload: CPW.EventPayloadData['kernelStatus']) {
     kernelStatus.value = payload.status
