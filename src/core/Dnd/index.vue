@@ -54,8 +54,8 @@
 
 <script lang="ts" setup>
 /* eslint-disable vue/no-side-effects-in-computed-properties */
-import { Dnd } from '@antv/x6-plugin-dnd'
-import { Graph } from '@antv/x6'
+import type { Dnd } from '@antv/x6-plugin-dnd'
+import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed } from 'vue'
 import { initDnd } from '../Graph'
 import { type NodeComponent, nodeCategory } from './utils'

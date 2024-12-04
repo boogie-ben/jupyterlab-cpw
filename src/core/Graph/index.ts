@@ -2,7 +2,7 @@ import { Graph /* , Path */ } from '@antv/x6'
 import { Dnd } from '@antv/x6-plugin-dnd'
 import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
-import { btnIcons } from '../utils'
+import { type btnIcons } from '../utils'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
 
 const portAttrs = {

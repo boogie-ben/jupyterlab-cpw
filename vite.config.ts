@@ -48,7 +48,8 @@ export default defineConfig(({ mode }) => {
         output: [{
           format: 'es' as any,
           // 去除src/目录层级
-          entryFileNames: info => info.name.replace('src/', '') + '.js',
+          // entryFileNames: info => info.name.replace('src/', '') + '.js',
+          entryFileNames: '[name].js',
           preserveModules: true,
         }],
       },

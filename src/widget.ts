@@ -1,10 +1,8 @@
-import { CommandRegistry } from '@lumino/commands'
+import type { CommandRegistry } from '@lumino/commands'
 import { Widget } from '@lumino/widgets'
-import { DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry'
+import { type DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry'
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
-
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
-// import type { IOutput } from '@jupyterlab/nbformat'
 import { renderCPW } from './core/index'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })

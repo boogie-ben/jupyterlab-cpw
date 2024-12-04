@@ -64,7 +64,7 @@
 import { computed, getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
 import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
 import type { Kernel } from '@jupyterlab/services'
-import { Graph, Cell } from '@antv/x6'
+import type { Graph, Cell } from '@antv/x6'
 import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
 // import { throttle } from 'lodash-es'
 import Toolbar from './Toolbar/index.vue'
