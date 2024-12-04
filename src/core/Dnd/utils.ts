@@ -22,7 +22,7 @@ export const nodeCategory: NodeCategory[] = [
     id: 'cate-2',
     name: 'cate-2',
     children: [
-      { key: 'ccccc', name: 'ccc', source: 'c = 333\nc', category: 'cate-2', bookmark: false },
+      { key: 'ccccc', name: 'ccc', source: 'import IPython\nimport pandas as pd\n\ndf = pd.read_csv(\'./demo_subject_id.csv\')\ntable = df.describe()\n# IPython.display.display(table)\ntable', category: 'cate-2', bookmark: false },
     ],
   },
   // { id: 'cate-3', name: 'cate-3', children: [] },

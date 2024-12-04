@@ -165,10 +165,11 @@ export const initDnd = (graph: Graph, dndContainer: HTMLElement) => {
   return dnd
 }
 
-export const statusIcon = {
+export const statusIcon: Record<CPW.Cell['status'], string> = {
   running: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="#3b77d8" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="16" stroke-dashoffset="16" d="M12 3c4.97 0 9 4.03 9 9"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="16;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path><path stroke-dasharray="64" stroke-dashoffset="64" stroke-opacity=".3" d="M12 3c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9c0 -4.97 4.03 -9 9 -9Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.2s" values="64;0"/></path></g></svg>',
   error: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#d54941" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10m0-2a8 8 0 1 0 0-16a8 8 0 0 0 0 16m-1-5h2v2h-2zm0-8h2v6h-2z"/></svg>',
   done: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2ba471" d="M20.985 7.378L10.38 17.985l-6.364-6.364l1.414-1.414l4.95 4.95l9.192-9.193z"/></svg>',
+  // done: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#2ba471" d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" /></svg>',
   changed: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#aaa" d="M12 15a3 3 0 1 1 0-6a3 3 0 0 1 0 6Z"/></svg>',
   waiting: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#aaa" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8"/><path fill="#aaa" d="M12.5 7H11v6l5.25 3.15l.75-1.23l-4.5-2.67z"/></svg>',
 }

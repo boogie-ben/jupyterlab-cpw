@@ -13,6 +13,12 @@
     并且cell的样式需要兼容在body和在画布中一致
 */
 
+.ellipsis-1 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 :root {
   --td-font-size-body-medium: 13px;
   --td-font-size-link-medium: 13px;
@@ -68,7 +74,7 @@
   /* --toolbar-height: 41px; */
 }
 
-.cpw-container * {
+.cpw-container *:not(.jp-OutputArea, .jp-OutputArea *) {
   box-sizing: border-box;
 }
 
@@ -105,12 +111,11 @@
   overflow-y: auto;
   overflow-x: hidden;
   font-size: 12px;
-  transition: width 200ms;
   user-select: none;
   background-color: var(--dnd-bg-color);
 }
 
-.cpw-dnd.cpw-dnd-collapsed {
+.cpw-dnd[collapsed=true] {
   display: none;
 }
 
@@ -267,6 +272,10 @@
   height: calc(var(--header-height) + 1px);
 }
 
+.cpw-outputs[dnd-collapsed=true] {
+  left: 0;
+}
+
 .cpw-outputs[expanded=true] {
   height: calc(var(--resize-height, 200px) + 1px);
 }
@@ -286,11 +295,10 @@
 }
 
 .cpw-outputs .cpw-outputs-header .cpw-outputs-header-content {
-  display: flex;
-  align-items: center;
   height: calc(100% - 4px);
   padding: 0 8px;
-  column-gap: 16px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .cpw-outputs .cpw-outputs-render {

@@ -125,6 +125,12 @@ class CPWWidget extends Widget {
     this._context.model.fromString(content)
   }
 
+  renderOutputs (payload: CPW.ActionPayloadData['renderOutputs']) {
+    const { id, outputs } = payload
+    const outputArea = new OutputArea({ model: new OutputAreaModel({ values: outputs }), maxNumberOutputs: 50, rendermime })
+    dispatchEvent(this.id, { type: 'cellOutputs', data: { id, outputs, node: outputArea.node } })
+  }
+
   save () {
     this._commands.execute('docmanager:save')
   }

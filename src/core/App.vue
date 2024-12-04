@@ -17,7 +17,12 @@
         class="cpw-graph"
       />
 
-      <Outputs :active-cell="activeCell" />
+      <Outputs
+        :id="id"
+        v-model:expanded="outputsVisible"
+        :dnd-collapsed="dndCollapsed"
+        :active-cell="activeCell"
+      />
     </div>
 
     <Teleport to="body">
@@ -92,6 +97,8 @@ const showMenu = (e: { clientX: number, clientY: number }, items: ContextMenuIte
   }
 }
 
+const outputsVisible = ref(false)
+
 const graphDom = shallowRef<HTMLDivElement>()
 let graph: Graph
 
@@ -100,6 +107,7 @@ const dndCollapsed = ref(false)
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
+  // window.graph = graph
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
 
@@ -114,7 +122,8 @@ onMounted(() => {
   graph.on('blank:click', () => setActive(null))
   graph.on('cell:click', (e) => e.cell.shape === 'cpw-cell-node' ? setActive(e.cell) : setActive(null))
 
-  // todo: node:dbclick打开outputs抽屉
+  // 触发双击之前会先触发单击事件，此时是会有active的
+  graph.on('node:dblclick', e => { if (e.cell.shape === 'cpw-cell-node') outputsVisible.value = true })
 
   // * ----- 右键菜单 ------
   graph.on('blank:contextmenu', ({ e }) => {
@@ -190,7 +199,7 @@ const copyCell = (target: string | Cell) => {
   if (!cell || cell.shape !== 'cpw-cell-node') return
   graph.copy([cell])
   const [newCell] = graph.paste()
-  updateCellData(newCell, { outputs: [], active: false, node: undefined, status: 'changed' })
+  updateCellData(newCell, { id: newCell.id, outputs: [], active: false, node: undefined, status: 'changed' })
   graph.cleanClipboard()
 }
 
@@ -241,6 +250,8 @@ const fileChange = useThrottleFn(
       if (cell.shape === 'cpw-cell-node') {
         delete cell.data.node
         cell.data.active = false
+        // 不保存节点运行中的状态
+        if (cell.data.status === 'running' || cell.data.status === 'waiting') cell.data.status = 'changed'
       }
     })
     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })

@@ -1,7 +1,7 @@
 <template>
   <div
     ref="dndDom"
-    :class="['cpw-dnd', collapsed && 'cpw-dnd-collapsed']"
+    class="cpw-dnd"
   >
     <!-- eslint-disable vue/no-v-html -->
     <div style="padding: 4px; width: 100%; display: flex; align-items: center; column-gap: 4px;">
@@ -63,8 +63,6 @@ import { btnIcons, type NodeCategory } from '../utils'
 import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon } from 'tdesign-icons-vue-next'
-
-defineProps<{ collapsed: boolean }>()
 
 let dnd: Dnd
 
