@@ -108,6 +108,8 @@ defineExpose({
   init: (graph: Graph) => {
     dnd = initDnd(graph, dndDom.value!)
     startDrag = (e: MouseEvent, item: NodeComponent) => {
+      if (e.button !== 0) return
+      e.preventDefault()
       const { key, name, source } = item
       const node = graph.createNode({
         shape: 'cpw-cell-node',

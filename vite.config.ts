@@ -15,24 +15,17 @@ const outDirSrc = resolve('./lib/src')
 export default defineConfig(({ mode }) => {
   return {
     plugins: [
-      nodeExternals({
-        // exclude: ['vue', 'tdesign-vue-next'],
-        // deps: false,
-        // include: [/^@lumino/, /^@jupyterlab/],
-      }),
+      nodeExternals(),
       vue(),
       vueJsx(),
-      /* mode !== 'dev' &&  */dts({
+      dts({
         copyDtsFiles: true,
         // 去除src/目录层级
         beforeWriteFile: (filepath, content) => ({ filePath: join(outDir, relative(outDirSrc, filepath)), content }),
       }),
     ],
     build: {
-      lib: {
-        entry: resolve('./src/index.ts'),
-        // formats: ['es'] as LibraryFormats[]
-      },
+      lib: { entry: resolve('./src/index.ts') },
       target: 'es2018',
       outDir,
       minify: false,
@@ -43,25 +36,13 @@ export default defineConfig(({ mode }) => {
       // 注意第一次run watch之前要先build一次
       emptyOutDir: mode !== 'dev',
       rollupOptions: {
-        treeshake: false,
+        treeshake: mode !== 'dev',
         // external: (source) => source.includes('node_modules'),
         output: [{
           format: 'es' as any,
-          // 去除src/目录层级
-          // entryFileNames: info => info.name.replace('src/', '') + '.js',
           entryFileNames: '[name].js',
           preserveModules: true,
         }],
-      },
-    },
-
-    // resolve: { alias: { '@': resolve('./src') } },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          api: 'modern-compiler',
-          // additionalData: '@use "@/common/styles/var.scss" as *;',
-        },
       },
     },
   }

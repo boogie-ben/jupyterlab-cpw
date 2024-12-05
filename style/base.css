@@ -307,6 +307,7 @@
   padding: 16px;
   background-color: var(--jp-layout-color0);
   overflow: auto;
+  border-top: 1px solid var(--jp-toolbar-border-color);
 }
 
 .cpw-outputs[expanded=true] .cpw-outputs-render {
