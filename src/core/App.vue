@@ -107,7 +107,6 @@ const dndCollapsed = ref(false)
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
-  // window.graph = graph
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
 

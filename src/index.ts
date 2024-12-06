@@ -50,8 +50,6 @@ function activate (
 
   const trans = translator.load('jupyterlab')
 
-  console.log(translator)
-
   const factory = new CPWFactory({
     name: FACTORY,
     fileTypes: ['cpw'],

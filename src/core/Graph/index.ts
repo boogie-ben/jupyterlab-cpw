@@ -4,7 +4,8 @@ import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
 import { type btnIcons } from '../utils'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
-
+import { detectDirectedCycle } from '@antv/algorithm'
+import { showErrorMessage } from '@jupyterlab/apputils'
 const portAttrs = {
   circle: {
     r: 4,
@@ -12,7 +13,7 @@ const portAttrs = {
     stroke: 'var(--cell-border-color)',
     strokeWidth: 1,
     fill: 'var(--cell-port-bg-color)',
-    // style: { visibility: 'hidden' },
+    style: { visibility: 'hidden' },
   },
 }
 
@@ -67,7 +68,7 @@ Graph.registerEdge(
         // stroke: '#C2C8D5',
         stroke: 'var(--line-color)',
         strokeWidth: 0.8,
-        targetMarker: { name: 'classic', args: { width: 6, height: 4 } },
+        targetMarker: { name: 'classic', args: { width: 7, height: 5 } },
       },
     },
     zIndex: -1,
@@ -98,7 +99,7 @@ export const initGraph = (dom: HTMLElement) => {
       allowMulti: false,
       allowEdge: false,
       allowNode: false,
-      highlight: true,
+      highlight: false,
       router: 'metro',
       connector: 'rounded',
       // connector: 'cpw-connector',
@@ -109,7 +110,11 @@ export const initGraph = (dom: HTMLElement) => {
         })
       },
       validateConnection (args) {
-        console.log(args)
+        if (!args.sourceCell || !args.targetCell) return true
+        // 如果源节点在别的分支里已经是目标节点的前序节点（目标节点在已经在某个分支里是源节点的后序节点），则不允许连接
+        if (this.isPredecessor(args.targetCell, args.sourceCell)) return false
+        const sourcePres = this.getPredecessors(args.sourceCell)
+        if (this.getPredecessors(args.targetCell).find(c => sourcePres.includes(c))) return false
         return true
       },
     },
@@ -135,7 +140,13 @@ export const initGraph = (dom: HTMLElement) => {
   graph.use(new Clipboard({ enabled: true }))
 
   graph.on('edge:connected', ({ edge }) => {
-    edge.attr({ line: { strokeDasharray: '' } })
+    if (detectDirectedCycle({ nodes: graph.getNodes(), edges: graph.getEdges().map(e => ({ source: e.getSourceCellId(), target: e.getTargetCellId() })) })) {
+      graph.removeCell(edge)
+      edge.dispose()
+      showErrorMessage('组件连接错误', '禁止出现回环')
+    } else {
+      edge.attr({ line: { strokeDasharray: '' } })
+    }
   })
 
   graph.on('edge:mouseenter', ({ edge }) => {
@@ -146,13 +157,13 @@ export const initGraph = (dom: HTMLElement) => {
     edge.attr({ line: { stroke: 'var(--line-color)' } })
   })
 
-  // graph.on('node:mouseenter', ({ node }) => {
-  //   node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'visible' } }))
-  // })
+  graph.on('node:mouseenter', ({ node }) => {
+    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'visible' } }))
+  })
 
-  // graph.on('node:mouseleave', ({ node }) => {
-  //   node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'hidden' } }))
-  // })
+  graph.on('node:mouseleave', ({ node }) => {
+    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'hidden' } }))
+  })
 
   return graph
 }
