@@ -12,7 +12,7 @@ const portAttrs = {
     stroke: 'var(--cell-border-color)',
     strokeWidth: 1,
     fill: 'var(--cell-port-bg-color)',
-    style: { visibility: 'hidden' },
+    // style: { visibility: 'hidden' },
   },
 }
 
@@ -108,9 +108,14 @@ export const initGraph = (dom: HTMLElement) => {
           attrs: { line: { strokeDasharray: '5 5' } },
         })
       },
+      validateConnection (args) {
+        console.log(args)
+        return true
+      },
     },
     // 连接时高亮port
     highlighting: {
+      // magnetAvailable: null,
       magnetAdsorbed: {
         name: 'stroke',
         args: { attrs: { stroke: '#0052d9', 'stroke-width': 2 } },
@@ -141,13 +146,13 @@ export const initGraph = (dom: HTMLElement) => {
     edge.attr({ line: { stroke: 'var(--line-color)' } })
   })
 
-  graph.on('node:mouseenter', ({ node }) => {
-    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'visible' } }))
-  })
+  // graph.on('node:mouseenter', ({ node }) => {
+  //   node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'visible' } }))
+  // })
 
-  graph.on('node:mouseleave', ({ node }) => {
-    node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'hidden' } }))
-  })
+  // graph.on('node:mouseleave', ({ node }) => {
+  //   node.getPorts().forEach(port => node.setPortProp(port.id!, ['attrs', 'circle'], { style: { visibility: 'hidden' } }))
+  // })
 
   return graph
 }

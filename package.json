@@ -47,6 +47,7 @@
         "watch:labextension": "jupyter labextension watch --development True ."
     },
     "dependencies": {
+        "@antv/algorithm": "^0.1.26",
         "@antv/x6": "^2.18.1",
         "@antv/x6-plugin-clipboard": "^2.1.6",
         "@antv/x6-plugin-dnd": "^2.1.1",
