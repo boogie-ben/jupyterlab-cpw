@@ -8,12 +8,12 @@
 
     <div class="cpw-graph-warpper">
       <Dnd
-        ref="dndRef"
+        ref="_dndRef"
         :collapsed="dndCollapsed"
       />
 
       <div
-        ref="graphDom"
+        ref="_graphDom"
         class="cpw-graph"
       />
 
@@ -28,7 +28,7 @@
     <Teleport to="body">
       <div
         v-if="contextMenu.visible"
-        ref="contextMenuDom"
+        ref="_contextMenuDom"
         class="cpw-contextmenu lm-Menu"
         :style="`--jp-border-width: 1px; left: ${contextMenu.x}px; top: ${contextMenu.y}px`"
       >
@@ -61,11 +61,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance, onMounted, ref, shallowRef } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
 import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import type { Graph, Cell } from '@antv/x6'
-import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem } from './Graph'
+import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem, portConfig } from './Graph'
 // import { throttle } from 'lodash-es'
 import Toolbar from './Toolbar/index.vue'
 import { useThrottleFn } from '@vueuse/core'
@@ -80,7 +80,7 @@ const props = defineProps<{
 
 const app = getCurrentInstance()?.appContext.app
 
-const contextMenuDom = shallowRef<HTMLDivElement>()
+const contextMenuDom = useTemplateRef('_contextMenuDom')
 
 const contextMenu = ref({
   visible: false,
@@ -99,10 +99,10 @@ const showMenu = (e: { clientX: number, clientY: number }, items: ContextMenuIte
 
 const outputsVisible = ref(false)
 
-const graphDom = shallowRef<HTMLDivElement>()
+const graphDom = useTemplateRef('_graphDom')
 let graph: Graph
 
-const dndRef = shallowRef<InstanceType<typeof Dnd>>()
+const dndRef = useTemplateRef('_dndRef')
 const dndCollapsed = ref(false)
 
 onMounted(() => {
@@ -131,7 +131,7 @@ onMounted(() => {
       [
         { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
         { divider: true },
-        { label: '清除所有节点输出', onClick: () => clearOutputs('all') },
+        { label: '清除所有组件输出', onClick: () => clearOutputs('all') },
       ],
     )
   })
@@ -144,21 +144,31 @@ onMounted(() => {
     showMenu(
       e,
       [
-        { label: '运行节点', icon: 'runSignal', onClick: () => run('single', node.id) },
-        { label: '运行至所选节点', icon: 'runToCurrent', onClick: () => run('to-current', node.id) },
+        { label: '运行组件', icon: 'runSignal', onClick: () => run('single', node.id) },
+        { label: '运行至所选组件', icon: 'runToCurrent', onClick: () => run('to-current', node.id) },
         { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
         { divider: true },
-        { label: '清除节点输出', onClick: () => clearOutputs('single', node) },
-        { label: '清除所有节点输出', onClick: () => clearOutputs('all') },
+        { label: '清除组件输出', onClick: () => clearOutputs('single', node) },
+        { label: '清除所有组件输出', onClick: () => clearOutputs('all') },
         { divider: true },
-        { label: '复制节点', icon: 'copy', onClick: () => copyCell(node) },
-        { label: '删除节点', icon: 'delete', onClick: () => delCell(node) },
+        { label: '复制组件', icon: 'copy', onClick: () => copyCell(node) },
+        { label: '删除组件', icon: 'delete', onClick: () => delCell(node) },
       ],
     )
   })
 
-  // 整个fileContent会在初始化时传入，并且不会变更，只有vue应用会单向往widget传递最新的fileContnet
-  graph.fromJSON({ cells: props.fileContent.cells })
+  /**
+   * 整个fileContent会在初始化时传入，并且不会变更，只有vue应用会单向往widget传递最新的fileContnet
+   * 需要补充在保存时去掉的一些冗余配置
+   */
+  graph.fromJSON({
+    cells: props.fileContent.cells.map(c => {
+      const cell = { ...c }
+      if (cell.shape === 'cpw-cell-node') cell.ports = portConfig
+      else if (cell.shape === 'cpw-edge') cell.attrs = { line: { strokeDasharray: '' } }
+      return cell
+    }),
+  })
 })
 
 // * ------------------- 节点操作 -------------------
@@ -248,9 +258,12 @@ const fileChange = useThrottleFn(
     json.cells.forEach(cell => {
       if (cell.shape === 'cpw-cell-node') {
         delete cell.data.node
+        delete cell.ports
         cell.data.active = false
         // 不保存节点运行中的状态
         if (cell.data.status === 'running' || cell.data.status === 'waiting') cell.data.status = 'changed'
+      } else if (cell.shape === 'cpw-edge') {
+        delete cell.attrs
       }
     })
     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
@@ -266,8 +279,8 @@ const toolbarBtns = computed<ToolbarBtn[]>(() => {
       ? { title: '展开组件列表', icon: 'menuClose', onClick: () => { dndCollapsed.value = false } }
       : { title: '收起组件列表', icon: 'menuOpen', onClick: () => { dndCollapsed.value = true } },
     { title: '保存', icon: 'save', onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
-    { title: '复制节点', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeCell.value!.id) },
-    { title: '运行节点', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeCell.value!.id) },
+    { title: '复制组件', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeCell.value!.id) },
+    { title: '运行组件', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeCell.value!.id) },
     { title: '运行至所选', icon: 'runToCurrent', disabled: noActive, onClick: () => run('to-current', activeCell.value!.id) },
     { title: '运行所有', icon: 'runAll', onClick: () => run('all') },
     { title: '中止内核', icon: 'stop', onClick: () => dispatchAction(props.id, { type: 'kernelInterrupt', data: null }) },

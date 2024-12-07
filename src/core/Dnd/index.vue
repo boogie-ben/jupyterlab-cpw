@@ -1,6 +1,6 @@
 <template>
   <div
-    ref="dndDom"
+    ref="_dndDom"
     class="cpw-dnd"
   >
     <!-- eslint-disable vue/no-v-html -->
@@ -56,7 +56,7 @@
 /* eslint-disable vue/no-side-effects-in-computed-properties */
 import type { Dnd } from '@antv/x6-plugin-dnd'
 import type { Graph } from '@antv/x6'
-import { ref, defineExpose, onBeforeUnmount, computed } from 'vue'
+import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
 import { type NodeComponent, nodeCategory } from './utils'
 import { btnIcons, type NodeCategory } from '../utils'
@@ -66,7 +66,7 @@ import { PlusIcon } from 'tdesign-icons-vue-next'
 
 let dnd: Dnd
 
-const dndDom = ref<HTMLDivElement>()
+const dndDom = useTemplateRef('_dndDom')
 const dndExpanded = ref<Record<string, boolean>>({})
 const toogleExpand = (id: string) => {
   if (dndExpanded.value[id]) delete dndExpanded.value[id]

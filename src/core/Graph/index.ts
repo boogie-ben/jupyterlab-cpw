@@ -17,25 +17,27 @@ const portAttrs = {
   },
 }
 
+export const portConfig = {
+  groups: {
+    top: { position: 'top', attrs: portAttrs },
+    bottom: { position: 'bottom', attrs: portAttrs },
+    left: { position: 'left', attrs: portAttrs },
+    right: { position: 'right', attrs: portAttrs },
+  },
+  items: [
+    { id: 'port1', group: 'top' },
+    { id: 'port2', group: 'right' },
+    { id: 'port3', group: 'bottom' },
+    { id: 'port4', group: 'left' },
+  ],
+}
+
 register({
   shape: 'cpw-cell-node',
   component: CPWNode,
   height: 40,
   width: 220,
-  ports: {
-    groups: {
-      top: { position: 'top', attrs: portAttrs },
-      bottom: { position: 'bottom', attrs: portAttrs },
-      left: { position: 'left', attrs: portAttrs },
-      right: { position: 'right', attrs: portAttrs },
-    },
-    items: [
-      { id: 'port1', group: 'top' },
-      { id: 'port2', group: 'right' },
-      { id: 'port3', group: 'bottom' },
-      { id: 'port4', group: 'left' },
-    ],
-  },
+  ports: portConfig,
 })
 
 // Graph.registerConnector(

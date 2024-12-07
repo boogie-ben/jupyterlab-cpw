@@ -1,13 +1,13 @@
 <template>
   <div
-    ref="containerDom"
+    ref="_containerDom"
     class="cpw-outputs"
     :style="`--resize-height: ${resizeHeight}px`"
     :expanded="expanded"
   >
     <div class="cpw-outputs-header">
       <div
-        ref="resizerDom"
+        ref="_resizerDom"
         class="cpw-outputs-header-resizer"
       />
 
@@ -45,14 +45,14 @@
     </div>
 
     <div
-      ref="renderDom"
+      ref="_renderDom"
       class="cpw-outputs-render"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { shallowRef, watch, ref, onMounted, onBeforeUnmount, defineModel } from 'vue'
+import { useTemplateRef, watch, ref, onMounted, onBeforeUnmount, defineModel } from 'vue'
 import { Button as TButton } from 'tdesign-vue-next'
 import { ChevronUpCircleIcon, ChevronDownCircleIcon } from 'tdesign-icons-vue-next'
 import { dispatchAction } from '../utils'
@@ -61,9 +61,9 @@ const props = defineProps<{
   activeCell: CPW.Cell | null
   id: string
 }>()
-const containerDom = shallowRef<HTMLDivElement>()
-const resizerDom = shallowRef<HTMLDivElement>()
-const renderDom = shallowRef<HTMLDivElement>()
+const containerDom = useTemplateRef('_containerDom')
+const resizerDom = useTemplateRef('_resizerDom')
+const renderDom = useTemplateRef('_renderDom')
 
 const empty = (str: string) => `<div>${str}</div>`
 
