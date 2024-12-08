@@ -1,22 +1,75 @@
 declare namespace CPW {
 
   /** .cpw文件的JSON模型 */
-  export interface FileSchema {
+  interface FileSchema {
     cells: import('@antv/x6').Cell.Properties[]
   }
 
-  export interface Cell {
-    /** 节点id，由graph自动生成 */
-    id: string
+  /** 组件输入配置 */
+  interface CellIncome {
+    /** 目标前序节点id */
+    fromId: string
+    /** 目标前序节点的输出变量名 */
+    fromName: string
+    /** 输入描述 */
+    desc: string
+    /** 输入值在本组件内使用的变量名 */
+    name: string
+  }
 
-    /** 节点名称 */
+  /** 组件参数配置选项 */
+  interface CellParamConfig {
+    string: { default: string }
+    number: { default: number }
+    option: { options: { label: string, value: string }[], default: string }
+    boolean: { default: boolean }
+  }
+
+  type ParamType = keyof CellParamConfig
+
+  type CellParam = { name: string, desc: string } & (
+    { type: 'string', value: string } |
+    { type: 'number', value: number } |
+    { type: 'option', value: string } |
+    { type: 'boolean', value: boolean }
+  )
+
+  /** 组件参数配置 */
+  // interface CellParam {
+  //   /** 参数名，也作为本组件内使用的变量名 */
+  //   name: string
+  //   /** 参数描述  */
+  //   desc: string
+  //   type: ParamType
+  //   value: string | number | boolean
+  // }
+
+  interface CellCommon {
+    /** 组件名称 */
     name: string
 
-    /** 节点类型，也就是左侧组件dnd里源组件key */
+    /** 组件类型，也就是左侧组件dnd里源组件key */
     key: string
+
+    /** 组件描述说明 */
+    desc: string
 
     /** 节点源代码 */
     source: string
+
+    /** 组件输入配置 */
+    incomes: CellIncome[]
+
+    /** 组件输入配置 */
+    outgos: string[]
+
+    /** 组件参数配置 */
+    params: CellParam[]
+  }
+
+  interface Cell extends CellCommon {
+    /** 组件内部id，由graph自动生成的id保持一致 */
+    id: string
 
     /** 输出 */
     outputs: import('@jupyterlab/nbformat').IOutput[]
@@ -25,28 +78,39 @@ declare namespace CPW {
      * - running 运行中
      * - error 运行结果错误
      * - done 成功，运行结果正常
-     * - changed 修改了节点代码内容或参数，但未重新执行
+     * - changed 修改了组件代码内容或参数，但未重新执行
      * - waiting 在本次运行的workflow线中，正在等待执行
      */
     status: 'running' | 'error' | 'done' | 'changed' | 'waiting'
 
-    /** 当前节点是否被选中，整个workflow仅有一个cell会active */
+    /** 当前组件是否被选中，整个workflow仅有一个cell会active */
     active: boolean
 
     /** 保存运行后的outputArea渲染节点 */
     node?: HTMLElement
   }
 
-  export interface RunnerCell {
+  interface RunnerCell {
+    /** 和Cell的id一致 */
     readonly id: string
-    /** 运行workflow时，把source处理后交由内核实际运行的代码 */
+    /** 运行workflow时，把source处理后交由内核实际运行的代码，也是导出ipynb的实际代码 */
     readonly code: string
+    /** 本次运行时组件的层级 */
+    readonly level: number
   }
 
-  // *------- 从vue应用内调用的action ------------
-  export type ActionType = 'run' | 'kernelResert' | 'kernelInterrupt' | 'exportIpynb' | 'change' | 'kernelStatus' | 'save' | 'renderOutputs'
+  /**
+   * 运行类型
+   * - all 运行所有
+   * - to-current 运行至所选节点
+   * - single 运行单个节点
+   */
+  type RunType = 'all' | 'to-current' | 'single'
 
-  export interface ActionPayloadData {
+  // *------- 从vue应用内调用的action ------------
+  type ActionType = 'run' | 'kernelResert' | 'kernelInterrupt' | 'exportIpynb' | 'change' | 'kernelStatus' | 'save' | 'renderOutputs'
+
+  interface ActionPayloadData {
     run: { cells: RunnerCell[] }
     kernelResert: null
     kernelInterrupt: null
@@ -57,14 +121,14 @@ declare namespace CPW {
     renderOutputs: { id: string, outputs: Cell['outputs'] }
   }
 
-  // export type ActionPayload<T extends ActionType> = { type: T } & (ActionPayloadData[T] extends null ? { data?: any } : { data: ActionPayloadData[T] })
-  export interface ActionPayload<T extends ActionType> {
+  // type ActionPayload<T extends ActionType> = { type: T } & (ActionPayloadData[T] extends null ? { data?: any } : { data: ActionPayloadData[T] })
+  interface ActionPayload<T extends ActionType> {
     type: T
     data: ActionPayloadData[T]
   }
 
   /** 从vue应用内向jupyter插件widget发起的操作事件 */
-  export interface DispatchAction {
+  interface DispatchAction {
     /** 运行指定workflow */
     (id: string, payload: ActionPayload<'run'>): any
     /** 重启内核 */
@@ -84,22 +148,22 @@ declare namespace CPW {
   }
 
   // *------- 从jupyter插件widget往vue应用派发的事件 ------------
-  export type EventType = 'cellOutputs' | 'cellStatus' | 'kernelStatus' | 'dispose'
+  type EventType = 'cellOutputs' | 'cellStatus' | 'kernelStatus' | 'dispose'
 
-  export interface EventPayloadData {
+  interface EventPayloadData {
     cellOutputs: { id: string, outputs: Cell['outputs'], node: HTMLElement }
     cellStatus: { id: string, status: Cell['status'] }
     kernelStatus: { status: import('@jupyterlab/services').Kernel.Status }
     dispose: null
   }
 
-  export interface EventPayload<T extends EventType> {
+  interface EventPayload<T extends EventType> {
     type: T
     data: EventPayloadData[T]
   }
 
   /** 从jupyter插件widget往vue应用派发事件 */
-  export interface DispatchEvent {
+  interface DispatchEvent {
     /** 对指定id的cell派发执行后输出的outputs数组 */
     (id: string, payload: EventPayload<'cellOutputs'>): any
     /** 对指定id的cell派发节点状态 */
@@ -109,13 +173,4 @@ declare namespace CPW {
     /** widget在dispose时派发 */
     (id: string, payload: EventPayload<'dispose'>): any
   }
-
-  // * -------------------
-  /**
-   * 运行类型
-   * - all 运行所有
-   * - to-current 运行至所选节点
-   * - single 运行单个节点
-   */
-  export type RunType = 'all' | 'to-current' | 'single'
 }

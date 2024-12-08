@@ -62,7 +62,7 @@
 
 <script lang="ts" setup>
 import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
-import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
+import { dispatchAction, btnIcons, type ToolbarBtn, wrapRunnerCode, getRunnerCellsToTarget } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import type { Graph, Cell } from '@antv/x6'
 import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem, portConfig } from './Graph'
@@ -72,6 +72,7 @@ import { useThrottleFn } from '@vueuse/core'
 // import { Dnd } from '@antv/x6-plugin-dnd'
 import Dnd from './Dnd/index.vue'
 import Outputs from './Outputs/index.vue'
+import { showErrorMessage } from '@jupyterlab/apputils'
 
 const props = defineProps<{
   id: string
@@ -107,6 +108,7 @@ const dndCollapsed = ref(false)
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
+  window.graph = graph
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
 
@@ -144,7 +146,7 @@ onMounted(() => {
     showMenu(
       e,
       [
-        { label: '运行组件', icon: 'runSignal', onClick: () => run('single', node.id) },
+        { label: '运行组件', icon: 'runSingle', onClick: () => run('single', node.id) },
         { label: '运行至所选组件', icon: 'runToCurrent', onClick: () => run('to-current', node.id) },
         { label: '运行所有', icon: 'runAll', onClick: () => run('all') },
         { divider: true },
@@ -182,6 +184,8 @@ const setActive = (target: string | Cell | null) => {
     if (activeCell.value && activeCell.value?.id !== cell.id) updateCellData(activeCell.value.id, { active: false })
     updateCellData(cell, { active: true })
     activeCell.value = { ...cell.getData() as CPW.Cell }
+
+    console.log(wrapRunnerCode(activeCell.value))
   } else {
     if (!activeCell.value) return
     updateCellData(activeCell.value.id, { active: false })
@@ -199,6 +203,7 @@ const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>) => {
 
 const delCell = (target: string | Cell) => {
   const cell = graph.removeCell(target as any)
+  if (cell && activeCell.value?.id === cell.id) activeCell.value = null
   cell?.dispose()
   return cell
 }
@@ -208,46 +213,37 @@ const copyCell = (target: string | Cell) => {
   if (!cell || cell.shape !== 'cpw-cell-node') return
   graph.copy([cell])
   const [newCell] = graph.paste()
+  // 只复制通用信息
   updateCellData(newCell, { id: newCell.id, outputs: [], active: false, node: undefined, status: 'changed' })
   graph.cleanClipboard()
 }
 
 const run = (type: CPW.RunType, id?: string) => {
-  if (kernelStatus.value !== 'idle') {
-    // todo 提示
-    return
-  }
-  const runnerCells: CPW.RunnerCell[] = []
+  if (kernelStatus.value !== 'idle') return showErrorMessage('运行失败', '内核非空闲状态')
+
+  let runnerCells: CPW.RunnerCell[] = []
   if (type === 'all') {
     // 分析所有
   } else if (type === 'to-current' && id) {
     // 分析所有至当前节点
+    const node = graph.getCellById(id)
+    runnerCells = getRunnerCellsToTarget(graph, node)
   } else if (type === 'single' && id) {
     // 运行当前节点
     const node = graph.getCellById(id)
-    const { source } = node.getData<CPW.Cell>()
-    updateCellData(node, { status: 'waiting' })
-    runnerCells.push({ id, code: source })
+    runnerCells = [{ id: node.id, level: 0, code: wrapRunnerCode(node.getData<CPW.Cell>()) }]
   }
-  // todo流水线解析分支运行
-  // const runnerCells = cells.map<CPW.RunnerCell>(cell => {
-  //   cell.status = 'waiting'
-  //   return {
-  //     id: cell.id,
-  //     // @ts-ignore
-  //     code: typeof cell.source === 'string' ? cell.source : cell.source.join(''),
-  //   }
-  // })
+  runnerCells.forEach(({ id }) => updateCellData(id, { status: 'waiting' }))
   dispatchAction(props.id, { type: 'run', data: { cells: runnerCells } })
 }
 
 const clearOutputs = (type: 'single' | 'all', target?: string | Cell) => {
   if (type === 'single' && target) {
     const cell = typeof target === 'string' ? graph.getCellById(target) : target
-    if (cell) updateCellData(cell, { outputs: [], node: undefined })
+    if (cell) updateCellData(cell, { outputs: [], node: undefined, status: 'changed' })
   } else {
     graph.getCells().forEach(node => {
-      if (node.shape === 'cpw-cell-node') updateCellData(node, { outputs: [], node: undefined })
+      if (node.shape === 'cpw-cell-node') updateCellData(node, { outputs: [], node: undefined, status: 'changed' })
     })
   }
 }
@@ -256,6 +252,7 @@ const fileChange = useThrottleFn(
   () => {
     const json = graph.toJSON()
     json.cells.forEach(cell => {
+      // 删除冗余配置
       if (cell.shape === 'cpw-cell-node') {
         delete cell.data.node
         delete cell.ports
@@ -280,7 +277,7 @@ const toolbarBtns = computed<ToolbarBtn[]>(() => {
       : { title: '收起组件列表', icon: 'menuOpen', onClick: () => { dndCollapsed.value = true } },
     { title: '保存', icon: 'save', onClick: () => dispatchAction(props.id, { type: 'save', data: null }) },
     { title: '复制组件', icon: 'copy', disabled: noActive, onClick: () => copyCell(activeCell.value!.id) },
-    { title: '运行组件', icon: 'runSignal', disabled: noActive, onClick: () => run('single', activeCell.value!.id) },
+    { title: '运行组件', icon: 'runSingle', disabled: noActive, onClick: () => run('single', activeCell.value!.id) },
     { title: '运行至所选', icon: 'runToCurrent', disabled: noActive, onClick: () => run('to-current', activeCell.value!.id) },
     { title: '运行所有', icon: 'runAll', onClick: () => run('all') },
     { title: '中止内核', icon: 'stop', onClick: () => dispatchAction(props.id, { type: 'kernelInterrupt', data: null }) },

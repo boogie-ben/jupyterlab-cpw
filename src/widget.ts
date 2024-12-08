@@ -4,6 +4,7 @@ import { type DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyte
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
 import { renderCPW } from './core/index'
+import { showErrorMessage } from '@jupyterlab/apputils'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
@@ -45,17 +46,19 @@ class CPWWidget extends Widget {
   }
 
   async run (payload: CPW.ActionPayloadData['run']) {
-    if (this.session?.kernel?.status !== 'idle') {
-      // todo 提醒dialog
-      console.log('内核未准备', this._context.sessionContext)
-      return
-    }
-    // todo 分支并行执行逻辑
+    if (this.session?.kernel?.status !== 'idle') return showErrorMessage('运行失败', '内核非空闲状态')
+
     const { cells } = payload
     const len = cells.length
 
+    // 每一次运行都确保执行一次import IPython
+    const future = this.session.kernel.requestExecute({ code: 'import IPython' })
+    await future.done
+
+    // todo 错误时中断执行
+
     for (let i = 0; i < len; i++) {
-      // todo 中断内核时打断循环
+      // todo 中断内核时打断循环, 并重置未执行节点状态
       const { id, code } = cells[i]
       dispatchEvent(this.id, { type: 'cellStatus', data: { id, status: 'running' } })
       const outputArea = new OutputArea({
@@ -106,6 +109,7 @@ class CPWWidget extends Widget {
   }
 
   kernelResert () {
+    // todo 打断正在执行的run循环
     this.session?.kernel?.restart()
   }
 

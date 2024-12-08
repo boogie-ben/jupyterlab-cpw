@@ -58,8 +58,8 @@ import type { Dnd } from '@antv/x6-plugin-dnd'
 import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
-import { type NodeComponent, nodeCategory } from './utils'
-import { btnIcons, type NodeCategory } from '../utils'
+import { type CellComponent, type CellCategory, cellCategory } from './utils'
+import { btnIcons } from '../utils'
 import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon } from 'tdesign-icons-vue-next'
@@ -76,14 +76,14 @@ const toogleExpand = (id: string) => {
 const keyword = ref('')
 const dbKeyword = refDebounced(keyword, 500)
 
-const list = computed<NodeCategory[]>(() => {
+const list = computed<CellCategory[]>(() => {
   const k = dbKeyword.value.trim()
   dndExpanded.value = {}
   if (!k) {
-    dndExpanded.value[nodeCategory[0].id] = true
-    return nodeCategory
+    dndExpanded.value[cellCategory[0].id] = true
+    return cellCategory
   }
-  const res = nodeCategory
+  const res = cellCategory
     .map(cate => ({ ...cate, children: cate.children.filter(item => item.name.includes(k)) }))
     .filter(cate => {
       const bool = !!cate.children.length
@@ -93,9 +93,9 @@ const list = computed<NodeCategory[]>(() => {
   return res
 })
 
-let startDrag: (e: MouseEvent, item: NodeComponent) => any
+let startDrag: (e: MouseEvent, item: CellComponent) => any
 
-// const startDrag = (e: MouseEvent, item: NodeComponent) => {
+// const startDrag = (e: MouseEvent, item: CellComponent) => {
 //   const { key, name, source } = item
 //   const node = graph.createNode({
 //     shape: 'cpw-cell-node',
@@ -107,13 +107,13 @@ let startDrag: (e: MouseEvent, item: NodeComponent) => any
 defineExpose({
   init: (graph: Graph) => {
     dnd = initDnd(graph, dndDom.value!)
-    startDrag = (e: MouseEvent, item: NodeComponent) => {
+    startDrag = (e: MouseEvent, item: CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
-      const { key, name, source } = item
+      const { key, name, source, incomes, outgos, params } = item
       const node = graph.createNode({
         shape: 'cpw-cell-node',
-        data: { key, name, source } as CPW.Cell,
+        data: JSON.parse(JSON.stringify({ key, name, source, incomes, outgos, params })) as CPW.Cell,
       })
       dnd.start(node, e)
     }

@@ -23,15 +23,24 @@ const getNode: any = inject('getNode')
 
 const node: Node = getNode()
 
-const data = reactive<CPW.Cell>({
+const defaultData: CPW.Cell = {
   id: node.id,
+  key: '',
   name: '',
   source: '',
   status: 'changed',
   active: false,
   outputs: [],
   node: undefined,
-  ...node.getData() as any,
+  desc: '',
+  incomes: [],
+  outgos: [],
+  params: [],
+}
+
+const data = reactive<CPW.Cell>({
+  ...defaultData,
+  ...node.getData<CPW.Cell>(),
 })
 
 node.setData({ ...data })

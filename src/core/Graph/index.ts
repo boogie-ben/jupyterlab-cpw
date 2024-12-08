@@ -6,6 +6,7 @@ import { type btnIcons } from '../utils'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
 import { detectDirectedCycle } from '@antv/algorithm'
 import { showErrorMessage } from '@jupyterlab/apputils'
+
 const portAttrs = {
   circle: {
     r: 4,
@@ -106,10 +107,7 @@ export const initGraph = (dom: HTMLElement) => {
       connector: 'rounded',
       // connector: 'cpw-connector',
       createEdge () {
-        return this.createEdge({
-          shape: 'cpw-edge',
-          attrs: { line: { strokeDasharray: '5 5' } },
-        })
+        return this.createEdge({ shape: 'cpw-edge', attrs: { line: { strokeDasharray: '5 5' } } })
       },
       validateConnection (args) {
         if (!args.sourceCell || !args.targetCell) return true
