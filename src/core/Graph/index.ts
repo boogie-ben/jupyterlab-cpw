@@ -4,7 +4,7 @@ import { register } from '@antv/x6-vue-shape'
 import CPWNode from './CPWNode.vue'
 import { type btnIcons } from '../utils'
 import { Clipboard } from '@antv/x6-plugin-clipboard'
-import { detectDirectedCycle } from '@antv/algorithm'
+import { detectAllCycles } from '@antv/algorithm'
 import { showErrorMessage } from '@jupyterlab/apputils'
 
 const portAttrs = {
@@ -140,7 +140,12 @@ export const initGraph = (dom: HTMLElement) => {
   graph.use(new Clipboard({ enabled: true }))
 
   graph.on('edge:connected', ({ edge }) => {
-    if (detectDirectedCycle({ nodes: graph.getNodes(), edges: graph.getEdges().map(e => ({ source: e.getSourceCellId(), target: e.getTargetCellId() })) })) {
+    if (
+      detectAllCycles({
+        nodes: graph.getNodes(),
+        edges: graph.getEdges().map(e => ({ source: e.getSourceCellId(), target: e.getTargetCellId() })),
+      }).length
+    ) {
       graph.removeCell(edge)
       edge.dispose()
       showErrorMessage('组件连接错误', '禁止出现回环')
