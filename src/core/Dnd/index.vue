@@ -4,7 +4,7 @@
     class="cpw-dnd"
   >
     <!-- eslint-disable vue/no-v-html -->
-    <div style="padding: 4px; width: 100%; display: flex; align-items: center; column-gap: 4px;">
+    <div class="cpw-dnd-header">
       <t-input
         v-model="keyword"
         size="small"
@@ -21,34 +21,37 @@
         <template #icon><PlusIcon size="20px" /></template>
       </t-button>
     </div>
-    <template
-      v-for="cate in list"
-      :key="cate.id"
-    >
-      <div
-        class="cpw-dnd-category"
-        :title="cate.name"
-        @click="toogleExpand(cate.id)"
+
+    <div class="cpw-dnd-content">
+      <template
+        v-for="cate in list"
+        :key="cate.id"
       >
         <div
-          class="cpw-dnd-category-icon"
-          :expanded="dndExpanded[cate.id]"
-          v-html="btnIcons.chevronRight"
-        />
-        <div class="cpw-dnd-category-label">{{ cate.name }}</div>
-      </div>
-      <template v-if="dndExpanded[cate.id]">
-        <div
-          v-for="item in cate.children"
-          :key="item.key"
-          class="cpw-dnd-component"
-          :title="item.name"
-          @mousedown="e => startDrag(e, item)"
+          class="cpw-dnd-category"
+          :title="cate.name"
+          @click="toogleExpand(cate.id)"
         >
-          {{ item.name }}
+          <div
+            class="cpw-dnd-category-icon"
+            :expanded="dndExpanded[cate.id]"
+            v-html="btnIcons.chevronRight"
+          />
+          <div class="cpw-dnd-category-label">{{ cate.name }}</div>
         </div>
+        <template v-if="dndExpanded[cate.id]">
+          <div
+            v-for="item in cate.children"
+            :key="item.key"
+            class="cpw-dnd-component"
+            :title="item.name"
+            @mousedown="e => startDrag(e, item)"
+          >
+            {{ item.name }}
+          </div>
+        </template>
       </template>
-    </template>
+    </div>
   </div>
 </template>
 

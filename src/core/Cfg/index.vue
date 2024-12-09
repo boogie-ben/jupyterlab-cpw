@@ -1,24 +1,13 @@
 <template>
   <div class="cpw-cfg">
-    <div
-      style="
-        border-bottom: 1px solid var(--jp-toolbar-border-color);
-        padding: 8px 12px;
-        line-height: 16px;
-        background-color: var(--jp-toolbar-background);
-        overflow-wrap: break-word;
-        text-align: center;
-    "
-    >
-      {{ activeCell.name }}
-    </div>
+    <div class="cpw-cfg-name">{{ activeCell.name }}</div>
 
-    <div style="display: flex;">
+    <div class="cpw-cfg-tabs">
       <div
         v-for="v, k in tabs"
         :key="k"
-        style="cursor: pointer; line-height: 32px; flex: 1; text-align: center; border-bottom: 1px solid;"
-        :style="{ borderBottomColor: tab === k ? 'var(--td-brand-color)' : 'var(--jp-toolbar-border-color)' }"
+        class="cpw-cfg-tab-item"
+        :active="tab === k"
         @click="tab = k"
       >
         {{ v }}
@@ -28,8 +17,9 @@
     <t-form
       v-if="tab === 'params'"
       label-align="top"
-      style="padding: 8px 12px; --td-comp-margin-xxl: var(--td-line-height-body-small); --td-comp-paddingLR-xl: 0px"
       :data="syncParams"
+      class="cpw-cfg-content"
+      style="--td-comp-margin-xxl: var(--td-line-height-body-small); --td-comp-paddingLR-xl: 0px;"
     >
       <div
         v-if="!syncParams.length"
@@ -37,6 +27,7 @@
       >
         组件无参数
       </div>
+
       <template
         v-for="param,i in syncParams"
         :key="param.name"
@@ -85,11 +76,14 @@
       </template>
     </t-form>
 
-    <div v-else-if="tab === 'io'">
+    <div
+      v-else-if="tab === 'io'"
+      class="cpw-cfg-content"
+    >
       输入输出显示
     </div>
 
-    <div style="padding: 8px 12px; border-top: 1px solid var(--jp-toolbar-border-color) ">
+    <div class="cpw-cfg-footer">
       <t-button
         content="编辑组件"
         variant="text"
