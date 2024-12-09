@@ -2,7 +2,8 @@
   <div class="cpw-container">
     <!-- eslint-disable vue/no-v-html -->
     <Toolbar
-      :btns="toolbarBtns"
+      :left="toolbarLeft"
+      :right="toolbarRight"
       :kernel-status="kernelStatus"
     />
 
@@ -17,10 +18,19 @@
         class="cpw-graph"
       />
 
+      <Cfg
+        v-if="!!activeCell"
+        :key="activeCell.id"
+        :active-cell="activeCell"
+        :collapsed="cfgCollapsed"
+        @params-changed="p => updateCellData(activeCell!.id, { params: p })"
+      />
+
       <Outputs
         :id="id"
         v-model:expanded="outputsVisible"
         :dnd-collapsed="dndCollapsed"
+        :cfg-collapsed="activeCell ? cfgCollapsed : true"
         :active-cell="activeCell"
       />
     </div>
@@ -73,6 +83,7 @@ import { useThrottleFn } from '@vueuse/core'
 import Dnd from './Dnd/index.vue'
 import Outputs from './Outputs/index.vue'
 import { showErrorMessage } from '@jupyterlab/apputils'
+import Cfg from './Cfg/index.vue'
 
 const props = defineProps<{
   id: string
@@ -106,9 +117,10 @@ let graph: Graph
 const dndRef = useTemplateRef('_dndRef')
 const dndCollapsed = ref(false)
 
+const cfgCollapsed = ref(false)
+
 onMounted(() => {
   graph = initGraph(graphDom.value!)
-  window.graph = graph
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
 
@@ -269,7 +281,7 @@ const fileChange = useThrottleFn(
 )
 
 // * ---------------- toolbar --------------------
-const toolbarBtns = computed<ToolbarBtn[]>(() => {
+const toolbarLeft = computed<ToolbarBtn[]>(() => {
   const noActive = !activeCell.value
   return [
     dndCollapsed.value
@@ -282,6 +294,15 @@ const toolbarBtns = computed<ToolbarBtn[]>(() => {
     { title: '运行所有', icon: 'runAll', onClick: () => run('all') },
     { title: '中止内核', icon: 'stop', onClick: () => dispatchAction(props.id, { type: 'kernelInterrupt', data: null }) },
     { title: '重启内核', icon: 'restart', onClick: () => dispatchAction(props.id, { type: 'kernelResert', data: null }) },
+  ]
+})
+
+const toolbarRight = computed<ToolbarBtn[]>(() => {
+  const noActive = !activeCell.value
+  return [
+    cfgCollapsed.value
+      ? { title: '展开组件配置', icon: 'menuOpen', disabled: noActive, onClick: () => { cfgCollapsed.value = false } }
+      : { title: '收起组件配置', icon: 'menuClose', disabled: noActive, onClick: () => { cfgCollapsed.value = true } },
   ]
 })
 

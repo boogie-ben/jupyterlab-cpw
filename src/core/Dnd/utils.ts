@@ -1,6 +1,8 @@
 export interface CellComponent extends CPW.CellCommon {
   category: string
   bookmark: boolean
+    /** 组件参数配置 */
+  paramsConfig: CPW.CellParamConfig[]
 }
 
 export interface CellCategory {
@@ -9,6 +11,7 @@ export interface CellCategory {
   children: CellComponent[]
 }
 
+// todo 接口返回的所有default === null的都换成undefined
 export const cellCategory: CellCategory[] = [
   {
     id: 'cate-1',
@@ -23,11 +26,17 @@ export const cellCategory: CellCategory[] = [
         desc: '',
         incomes: [/* { fromId: 'adwdc-12d21', fromName: 'ddd', name: 'ccc', desc: '' } */],
         outgos: ['aaa'],
-        params: [
-          { name: 'p1', type: 'boolean', value: true, desc: '' },
-          { name: 'p2', type: 'option', value: 'opt-value', desc: '' },
-          { name: 'p3', type: 'string', value: 'str-value', desc: '' },
-          { name: 'p4', type: 'number', value: 2.1, desc: '' },
+        paramsConfig: [
+          { type: 'str', default: undefined, desc: 'str必选', required: true, name: 'str_a' },
+          { type: 'str', default: undefined, desc: 'str可选', required: false, name: 'str_b' },
+
+          { type: 'opt', default: undefined, desc: 'opt必选', required: true, name: 'opt_a', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
+          { type: 'opt', default: undefined, desc: 'opt可选', required: false, name: 'opt_b', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
+
+          { type: 'num', default: undefined, desc: 'num必选', required: true, name: 'num_a' },
+          { type: 'num', default: undefined, desc: '', required: false, name: 'num_b' },
+
+          { type: 'bool', default: true, desc: 'bool', required: true, name: 'bool' },
         ],
       },
       {
@@ -39,7 +48,7 @@ export const cellCategory: CellCategory[] = [
         desc: '',
         incomes: [],
         outgos: [],
-        params: [],
+        paramsConfig: [],
       },
     ],
   },
@@ -56,7 +65,7 @@ export const cellCategory: CellCategory[] = [
         desc: '',
         incomes: [],
         outgos: ['table'],
-        params: [],
+        paramsConfig: [],
       },
     ],
   },

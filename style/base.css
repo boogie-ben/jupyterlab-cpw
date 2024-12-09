@@ -38,7 +38,7 @@
   --line-color: #999;
   --line-hover-color: #0052d9;
 
-  --dnd-bg-color: #fff;
+  --aside-bg-color: #fff;
   --dnd-category-bg-color: #fff;
   --dnd-component-bg-color: #fff;
   --dnd-highlight-bg-color: #f3f3f3;
@@ -57,7 +57,7 @@
   --line-color: #acacac;
   --line-hover-color: #4582e6;
 
-  --dnd-bg-color: #111;
+  --aside-bg-color: #111;
   --dnd-category-bg-color: #212121;
   --dnd-component-bg-color: #181818;
   --dnd-highlight-bg-color: transparent;
@@ -70,8 +70,9 @@
   width: 100%;
 
   --toolbar-height: 33px;
-  --dnd-width: 181px;
   /* --toolbar-height: 41px; */
+  --dnd-width: 181px;
+  --cfg-width: 221px;
 }
 
 .cpw-container *:not(.jp-OutputArea, .jp-OutputArea *) {
@@ -110,9 +111,9 @@
   border-right: 1px solid var(--jp-toolbar-border-color);
   overflow-y: auto;
   overflow-x: hidden;
-  font-size: 12px;
+  /* font-size: 12px; */
   user-select: none;
-  background-color: var(--dnd-bg-color);
+  background-color: var(--aside-bg-color);
 }
 
 .cpw-dnd[collapsed=true] {
@@ -265,7 +266,7 @@
   position: absolute;
   bottom: 0;
   left: var(--dnd-width);
-  right: 0;
+  right: var(--cfg-width);
   border-top: 1px solid var(--jp-toolbar-border-color);
   max-height: 100%;
   min-height: calc(var(--header-height) + 1px);
@@ -274,6 +275,10 @@
 
 .cpw-outputs[dnd-collapsed=true] {
   left: 0;
+}
+
+.cpw-outputs[cfg-collapsed=true] {
+  right: 0;
 }
 
 .cpw-outputs[expanded=true] {
@@ -312,4 +317,20 @@
 
 .cpw-outputs[expanded=true] .cpw-outputs-render {
   display: block;
+}
+
+/* ------------------- 右侧组件配置抽屉 -----------------------*/
+.cpw-cfg {
+  flex-shrink: 0;
+  height: 100%;
+  width: var(--cfg-width);
+  border-left: 1px solid var(--jp-toolbar-border-color);
+  overflow-y: auto;
+  overflow-x: hidden;
+  user-select: none;
+  background-color: var(--aside-bg-color);
+}
+
+.cpw-cfg[collapsed=true] {
+  display: none;
 }

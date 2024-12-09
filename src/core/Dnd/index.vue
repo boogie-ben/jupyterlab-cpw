@@ -59,7 +59,7 @@ import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
 import { type CellComponent, type CellCategory, cellCategory } from './utils'
-import { btnIcons } from '../utils'
+import { btnIcons, formatCellParams } from '../utils'
 import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon } from 'tdesign-icons-vue-next'
@@ -110,10 +110,10 @@ defineExpose({
     startDrag = (e: MouseEvent, item: CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
-      const { key, name, source, incomes, outgos, params } = item
+      const { key, name, source, incomes, outgos, paramsConfig } = item
       const node = graph.createNode({
         shape: 'cpw-cell-node',
-        data: JSON.parse(JSON.stringify({ key, name, source, incomes, outgos, params })) as CPW.Cell,
+        data: JSON.parse(JSON.stringify({ key, name, source, incomes, outgos, params: formatCellParams(paramsConfig) })) as CPW.Cell,
       })
       dnd.start(node, e)
     }

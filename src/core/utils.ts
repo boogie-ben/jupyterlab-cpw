@@ -13,6 +13,7 @@ import {
   mdiMenuOpen,
   mdiMenuClose,
   mdiChevronRight,
+  mdiHelpCircleOutline,
 } from '@mdi/js'
 
 export const dispatchAction: CPW.DispatchAction = (id, payload) => {
@@ -46,15 +47,36 @@ export const btnIcons = {
   menuOpen: mdiSvg(mdiMenuOpen),
   menuClose: mdiSvg(mdiMenuClose),
   chevronRight: mdiSvg(mdiChevronRight),
+  help: mdiSvg(mdiHelpCircleOutline),
 }
 
 export type BtnIcon = keyof typeof btnIcons
 
-export interface ToolbarBtn {
+export type ToolbarBtn = {
   title: string
   icon: BtnIcon
   disabled?: boolean
   onClick:(e: MouseEvent) => any
+}
+
+// * ------------- 组件参数处理 --------------------
+export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[] => {
+  return configs.map((cfg) => {
+    const { type, name, desc, required, options, default: _default } = cfg
+
+    let value = _default
+    if (type === 'bool') value = !!value
+
+    return {
+      type,
+      name,
+      desc,
+      required,
+      options,
+      value,
+      default: _default,
+    }
+  })
 }
 
 // * ----------- 流水线运行解析 ----------
@@ -87,7 +109,7 @@ export const getRunnerCellsToTarget = (graph: Graph, node: Cell): CPW.RunnerCell
 const pid = (id: string) => id.replace(/-/g, '_')
 
 export const wrapRunnerCode = (cpwCell: CPW.Cell) => {
-  const { id: _id, incomes, outgos, params, source, name } = cpwCell
+  const { id: _id, incomes, outgos, params, source/* , name */ } = cpwCell
 
   const id = pid(_id)
 
@@ -107,20 +129,25 @@ export const wrapRunnerCode = (cpwCell: CPW.Cell) => {
 
   const outgoRenders = outgos.map(name => `IPython.display.display(__cpw_${id}_res['${name}'])`).join('\n')
 
-  const paramDeclares = params.map(o => {
+  const paramDeclares = params.map(param => {
     let v = 'None'
-    switch (o.type) {
-    case 'boolean':
-      v = o.value ? 'True' : 'False'
+
+    switch (param.type) {
+    case 'bool':
+      // bool类型不会留空
+      v = param.value ? 'True' : 'False'
       break
-    case 'option':
-    case 'string':
-      v = `'${o.value}'`
+    case 'opt':
+    case 'str':
+      // 字符串和选项类型自动包裹引号，无需像和鲸一样得用户给参数值包裹引号
+      if (!param.required && !param.value) v = 'None' // 留空时为None
+      else v = `'${param.value}'`
       break
-    case 'number':
-      v = (parseFloat(o.value as any) || 'None') + ''
+    case 'num':
+      if (!param.required && !param.value) v = 'None' // 留空时为None
+      else v = (parseFloat(param.value as any) || 'None') + '' // 非法值兜底也是None
     }
-    return `    ${o.name} = ${v}`
+    return `    ${param.name} = ${v}`
   }).join('\n')
 
   const code =
@@ -129,8 +156,8 @@ ${paramDeclares}
 ${sourceCode}
 ${outgoReturns}
 ${excute}
-${outgoRenders}
-'组件 ${name} 执行完毕'`
+${outgoRenders}`
+// '组件 ${name} 执行完毕'` // 最后一行暂时不要，因为发现excute_count区分不了组件
 
   return code
 }

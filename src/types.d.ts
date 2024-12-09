@@ -18,31 +18,60 @@ declare namespace CPW {
   }
 
   /** 组件参数配置选项 */
-  interface CellParamConfig {
-    string: { default: string }
-    number: { default: number }
-    option: { options: { label: string, value: string }[], default: string }
-    boolean: { default: boolean }
+  // interface CellParamConfigMap {
+  //   string: { default: string }
+  //   number: { default: number }
+  //   option: { options: { label: string, value: string }[], default: string }
+  //   boolean: { default: boolean }
+  // }
+
+  // type ParamType = keyof CellParamConfigMap
+
+  // type CellParamConfig = (
+  //   { type: 'string', name: string, desc: string, default?: string, required: boolean } |
+  //   { type: 'number', name: string, desc: string, default?: number, required: boolean } |
+  //   { type: 'option', name: string, desc: string, default?: string, required: boolean } |
+  //   { type: 'boolean', name: string, desc: string, default: boolean }
+  // )
+
+  // type CellParam = (
+  //   { type: 'string', name: string, desc: string, value?: string, default: string | null, required: boolean } |
+  //   { type: 'number', name: string, desc: string, value?: number, default: number | null, required: boolean } |
+  //   { type: 'boolean', name: string, desc: string, value?: boolean, default: boolean | null, required: boolean } |
+  //   { type: 'option', name: string, desc: string, value?: string, default: string | null, required: boolean, options: { label: string, value: string }[] }
+  // )
+
+  interface CellParam {
+    /** 参数类型 */
+    type: 'str' | 'num' | 'bool' | 'opt'
+    /**
+     * 参数值，在画布上创建组件时填充，创建后可修改组件参数值
+     * 如果有默认值将填充默认值
+     * 如果参数可留空，则空时的值为undefined（和td表单组件的选择器、数值输入清空状态一样）
+     */
+    value: string | number | boolean | undefined
+    /**
+     * 参数默认值
+     * str、num、opt类型非必选时，若无值，py运行时则会是None，不会是空字符串（跟和鲸一样）
+     * bool类型固定必须，只有true或false
+     */
+    default: string | number | boolean | undefined
+    /**
+     * 是否必选
+     * bool类型固定必选，会忽略本字段逻辑
+     */
+    required: boolean
+    /** 参数的变量名 */
+    name: string
+    /** 参数描述 */
+    desc: string
+    /** option类型时必须要有options字段 */
+    options?: { label: string, value: string }[]
   }
 
-  type ParamType = keyof CellParamConfig
+  type CellParamConfig = Omit<CellParam, 'value'>
 
-  type CellParam = { name: string, desc: string } & (
-    { type: 'string', value: string } |
-    { type: 'number', value: number } |
-    { type: 'option', value: string } |
-    { type: 'boolean', value: boolean }
-  )
-
-  /** 组件参数配置 */
-  // interface CellParam {
-  //   /** 参数名，也作为本组件内使用的变量名 */
-  //   name: string
-  //   /** 参数描述  */
-  //   desc: string
-  //   type: ParamType
-  //   value: string | number | boolean
-  // }
+  type CellParamType = CellParam['type']
 
   interface CellCommon {
     /** 组件名称 */
@@ -62,9 +91,6 @@ declare namespace CPW {
 
     /** 组件输入配置 */
     outgos: string[]
-
-    /** 组件参数配置 */
-    params: CellParam[]
   }
 
   interface Cell extends CellCommon {
@@ -88,6 +114,9 @@ declare namespace CPW {
 
     /** 保存运行后的outputArea渲染节点 */
     node?: HTMLElement
+
+    /** 组件参数 */
+    params: CellParam[]
   }
 
   interface RunnerCell {

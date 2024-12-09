@@ -2,7 +2,7 @@
   <div class="cpw-toolbar">
     <!-- eslint-disable vue/no-v-html -->
     <t-button
-      v-for="btn, i in btns"
+      v-for="btn, i in left"
       :key="i"
       :title="btn.title"
       :disabled="btn.disabled"
@@ -35,6 +35,25 @@
         />
       </template>
     </t-button>
+
+    <t-button
+      v-for="btn, i in right"
+      :key="i"
+      :title="btn.title"
+      :disabled="btn.disabled"
+      size="small"
+      variant="text"
+      shape="square"
+      @click="btn.onClick"
+    >
+      <template #icon>
+        <span
+          class="t-icon"
+          style="font-size: 16px;"
+          v-html="btnIcons[btn.icon] || ''"
+        />
+      </template>
+    </t-button>
   </div>
 </template>
 
@@ -43,7 +62,8 @@ import { type ToolbarBtn, kernelStatusLabel, btnIcons } from '../utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Button as TButton } from 'tdesign-vue-next'
 defineProps<{
-  btns: ToolbarBtn[]
+  left: ToolbarBtn[]
+  right: ToolbarBtn[]
   kernelStatus: Kernel.Status
 }>()
 </script>
