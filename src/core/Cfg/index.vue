@@ -77,10 +77,17 @@
     </t-form>
 
     <div
-      v-else-if="tab === 'io'"
+      v-else-if="tab === 'incomes'"
       class="cpw-cfg-content"
     >
-      输入输出显示
+      输入显示
+    </div>
+
+    <div
+      v-else-if="tab === 'outgos'"
+      class="cpw-cfg-content"
+    >
+      输出显示
     </div>
 
     <div class="cpw-cfg-footer">
@@ -113,7 +120,7 @@ import { useThrottleFn } from '@vueuse/core'
 
 const props = defineProps<{ activeCell: CPW.Cell }>()
 
-const tabs = { params: '参数', io: '输入输出' }
+const tabs = { params: '参数', incomes: '输入', outgos: '输出' }
 const tab = ref<keyof typeof tabs>('params')
 
 const edit = () => {
