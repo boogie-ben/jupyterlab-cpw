@@ -20,10 +20,10 @@
 }
 
 :root {
-  --td-font-size-body-medium: 13px;
-  --td-font-size-link-medium: 13px;
-  --td-font-size-mark-medium: 13px;
-  --td-font-size-title-small: 13px;
+  --td-font-size-body-medium: 13px !important;
+  --td-font-size-link-medium: 13px !important;
+  --td-font-size-mark-medium: 13px !important;
+  --td-font-size-title-small: 13px !important;
 }
 
 /* .cpw-container { */

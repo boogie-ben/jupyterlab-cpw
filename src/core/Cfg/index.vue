@@ -1,5 +1,18 @@
 <template>
   <div class="cpw-cfg">
+    <div
+      style="
+        border-bottom: 1px solid var(--jp-toolbar-border-color);
+        padding: 8px 12px;
+        line-height: 16px;
+        background-color: var(--jp-toolbar-background);
+        overflow-wrap: break-word;
+        text-align: center;
+    "
+    >
+      {{ activeCell.name }}
+    </div>
+
     <div style="display: flex;">
       <div
         v-for="v, k in tabs"
@@ -15,7 +28,7 @@
     <t-form
       v-if="tab === 'params'"
       label-align="top"
-      style="padding: 8px 12px;"
+      style="padding: 8px 12px; --td-comp-margin-xxl: var(--td-line-height-body-small); --td-comp-paddingLR-xl: 0px"
       :data="syncParams"
     >
       <div
@@ -28,24 +41,20 @@
         v-for="param,i in syncParams"
         :key="param.name"
       >
-        <t-form-item
-          v-if="param.type === 'bool'"
-          style="--td-comp-paddingLR-xl: 0px"
-        >
-          <t-checkbox
-            v-model="(param.value as boolean)"
-            style="width: 100%;"
-            @change="valueChange"
-          >
-            <FormLabel :param="param" />
-          </t-checkbox>
+        <t-form-item v-if="param.type === 'bool'">
+          <div style="flex: 1; width: 0; display: flex; align-items: center;">
+            <t-checkbox
+              v-model="(param.value as boolean)"
+              @change="valueChange"
+            />
+            <div style="flex: 1; width: 0;"><FormLabel :param="param" /></div>
+          </div>
         </t-form-item>
 
         <t-form-item
           v-else
           :name="`${i}.value`"
           :rules="[{ validator: () => paramValidator(param), message: '请输入合法值', type: 'error', trigger: 'change' }]"
-          style="--td-comp-paddingLR-xl: px0"
         >
           <!-- todo label后的question图标显示desc -->
           <template #label><FormLabel :param="param" /></template>
@@ -130,6 +139,7 @@ const FormLabel = ({ param }: { param: CPW.CellParam }) => {
     }
   </div>
 }
+
 interface Emits {
   (e: 'paramsChanged', params: CPW.CellParam[]): void
 }
