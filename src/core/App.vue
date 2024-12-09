@@ -194,10 +194,9 @@ const setActive = (target: string | Cell | null) => {
     const cell = typeof target === 'string' ? graph.getCellById(target) : target
     if (cell?.shape !== 'cpw-cell-node') return
     if (activeCell.value && activeCell.value?.id !== cell.id) updateCellData(activeCell.value.id, { active: false })
+    if (activeCell.value?.id === cell.id) return
     updateCellData(cell, { active: true })
     activeCell.value = { ...cell.getData() as CPW.Cell }
-
-    console.log(wrapRunnerCode(activeCell.value))
   } else {
     if (!activeCell.value) return
     updateCellData(activeCell.value.id, { active: false })
@@ -278,6 +277,7 @@ const fileChange = useThrottleFn(
     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
   },
   100,
+  true,
 )
 
 // * ---------------- toolbar --------------------

@@ -56,6 +56,7 @@ import { useTemplateRef, watch, ref, onMounted, onBeforeUnmount, defineModel } f
 import { Button as TButton } from 'tdesign-vue-next'
 import { ChevronUpCircleIcon, ChevronDownCircleIcon } from 'tdesign-icons-vue-next'
 import { dispatchAction } from '../utils'
+import { useThrottleFn } from '@vueuse/core'
 
 const props = defineProps<{
   activeCell: CPW.Cell | null
@@ -67,21 +68,44 @@ const renderDom = useTemplateRef('_renderDom')
 
 const empty = (str: string) => `<div>${str}</div>`
 
-const updateOutputsRender = () => {
-  if (!props.activeCell) {
-    renderDom.value!.innerHTML = empty('当前无选中组件')
-    return
-  }
-  const { id, outputs, node } = props.activeCell
-  if (node) {
+// 数据流-activeCell非常频繁更改导致多次重复渲染
+const updateOutputsRender = useThrottleFn(
+  () => {
+    if (!props.activeCell) {
+      renderDom.value!.innerHTML = empty('当前无选中组件')
+      return
+    }
+    const { id, outputs, node } = props.activeCell
+    if (node) {
       renderDom.value!.textContent = ''
       renderDom.value!.appendChild(node)
-  } else {
-    renderDom.value!.innerHTML = empty('当前组件无输出')
-    // 如果节点有outputs但是没node，表示是重新打开的文件，需要渲染outputs数组
-    if (outputs.length) dispatchAction(props.id, { type: 'renderOutputs', data: { id, outputs } })
-  }
-}
+    } else {
+      renderDom.value!.innerHTML = empty('当前组件无输出')
+      // 如果节点有outputs但是没node，表示是重新打开的文件，需要渲染outputs数组
+      if (outputs.length) dispatchAction(props.id, { type: 'renderOutputs', data: { id, outputs } })
+    }
+  },
+  150,
+  true,
+  false,
+)
+
+// const updateOutputsRender = () => {
+//   console.log(111)
+//   if (!props.activeCell) {
+//       renderDom.value!.innerHTML = empty('当前无选中组件')
+//       return
+//   }
+//   const { id, outputs, node } = props.activeCell
+//   if (node) {
+//       renderDom.value!.textContent = ''
+//       renderDom.value!.appendChild(node)
+//   } else {
+//       renderDom.value!.innerHTML = empty('当前组件无输出')
+//       // 如果节点有outputs但是没node，表示是重新打开的文件，需要渲染outputs数组
+//       if (outputs.length) dispatchAction(props.id, { type: 'renderOutputs', data: { id, outputs } })
+//   }
+// }
 
 watch(() => props.activeCell, updateOutputsRender)
 onMounted(updateOutputsRender)

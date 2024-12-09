@@ -36,7 +36,7 @@ export const cellCategory: CellCategory[] = [
           { type: 'num', default: undefined, desc: 'num必选', required: true, name: 'num_a' },
           { type: 'num', default: undefined, desc: '', required: false, name: 'num_b' },
 
-          { type: 'bool', default: true, desc: 'bool', required: true, name: 'bool' },
+          { type: 'bool', default: false, desc: 'bool', required: true, name: 'bool' },
         ],
       },
       {

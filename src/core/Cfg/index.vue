@@ -1,6 +1,5 @@
 <template>
   <div class="cpw-cfg">
-    <!-- eslint-disable vue/no-v-html -->
     <div style="display: flex;">
       <div
         v-for="v, k in tabs"
@@ -138,31 +137,8 @@ const emit = defineEmits<Emits>()
 const valueChange = useThrottleFn(
   () => emit('paramsChanged', syncParams.value.map(p => ({ ...p }))),
   100,
+  true,
 )
-
-// const paramsForm = reactive(
-//   props.activeCell.params.reduce<Record<string, CPW.CellParam['value']>>(
-//     (res, param) => {
-//       res[param.name] = param.value
-//       return res
-//     },
-//     {},
-//   ),
-// )
-
-// const paramsInfoMap = reactive(
-//   props.activeCell.params.reduce<Record<string, CPW.CellParamConfig>>(
-//     (res, config) => {
-//       res[config.name] = config
-//       return res
-//     },
-//     {},
-//   ),
-// )
-
-// const getRules = (param: CPW.CellParam): FormRule[] => {
-//   return [{ validator }]
-// }
 
 // todo 对话框更新config时，重新执行
 </script>
