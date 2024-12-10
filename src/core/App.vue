@@ -10,6 +10,8 @@
     <div class="cpw-graph-warpper">
       <Dnd
         ref="_dndRef"
+        :loading="cateLoading"
+        :data="cellCategories"
         :collapsed="dndCollapsed"
       />
 
@@ -20,10 +22,14 @@
 
       <Cfg
         v-if="!!activeCell"
+        ref="_cfgRef"
         :key="activeCell.id"
         :active-cell="activeCell"
+        :cate="cellCategories"
+        :get-predecessors="getPredecessors"
+        :outgos-map="outgosMap"
         :collapsed="cfgCollapsed"
-        @params-changed="p => updateCellData(activeCell!.id, { params: p })"
+        @config-changed="configChange"
       />
 
       <Outputs
@@ -71,7 +77,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
+import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef, type UnwrapRef } from 'vue'
 import { dispatchAction, btnIcons, type ToolbarBtn, wrapRunnerCode, getRunnerCellsToTarget } from './utils'
 import type { Kernel } from '@jupyterlab/services'
 import type { Graph, Cell } from '@antv/x6'
@@ -81,9 +87,11 @@ import Toolbar from './Toolbar/index.vue'
 import { useThrottleFn } from '@vueuse/core'
 // import { Dnd } from '@antv/x6-plugin-dnd'
 import Dnd from './Dnd/index.vue'
+import { type CellCategory, _cellCategories } from './Dnd/utils'
 import Outputs from './Outputs/index.vue'
 import { showErrorMessage } from '@jupyterlab/apputils'
 import Cfg from './Cfg/index.vue'
+// import { type TdCascaderProps } from 'tdesign-vue-next'
 
 const props = defineProps<{
   id: string
@@ -118,16 +126,45 @@ const dndRef = useTemplateRef('_dndRef')
 const dndCollapsed = ref(false)
 
 const cfgCollapsed = ref(false)
+const cfgRef = useTemplateRef('_cfgRef')
 
 onMounted(() => {
   graph = initGraph(graphDom.value!)
   dndRef.value!.init(graph)
   // dnd = initDnd(graph, dndDom.value!)
 
-  graph.on('node:added', fileChange)
+  graph.on('node:added', ({ node }) => {
+    if (node.shape === 'cpw-cell-node') setOutgosMap('set', node)
+    fileChange()
+  })
   graph.on('node:moved', fileChange)
   graph.on('cell:removed', fileChange)
-  graph.on('edge:connected', fileChange)
+  graph.on('edge:connected', ({ edge }) => {
+    if (edge.disposed) return // edge:connected会先执行在initGraph时注册的相同事件判断连接是否合法
+
+    // 如果新增的连线目标是当前激活组件或是其前序组件，则需要更新Cfg的输入设置
+    if (activeCell.value) {
+      const targetCell = edge.getTargetCell()
+      if (targetCell) {
+        const activeId = activeCell.value.id
+        if (activeCell.value.id === targetCell.id || graph.isPredecessor(graph.getCellById(activeId), targetCell)) {
+          cfgRef.value?.incomeUpdater()
+        }
+      }
+    }
+    fileChange()
+  })
+  graph.on('edge:removed', ({ edge }) => {
+    /**
+     * edge的移除分几种情况
+     * 1.拉了线出来但是没有连接，松开鼠标会消失，这个时候的edge是没有targetCell的，只有坐标
+     * 2.已经连接，但是被edge:connected中的回环检测移除，此时edge的data有标记{ cancel: true }
+     *
+     * 忽略以上两种情况之后，别的情况就是一个已经正常连接的edge被移除，此时判断是否需要更新Cfg组件的输入设置
+     */
+    if (!edge.getTargetCellId() || edge.getData()?.cancel) return
+    cfgRef.value?.incomeUpdater()
+  })
   /** 因为graph.fromJSON会触发这个node:change:data事件导致一打开文件就是修改状态，data变更的fileChange改为在updateCellData中调用 */
   // graph.on('node:change:data', fileChange)
 
@@ -183,6 +220,8 @@ onMounted(() => {
       return cell
     }),
   })
+
+  setOutgosMap('all')
 })
 
 // * ------------------- 节点操作 -------------------
@@ -197,6 +236,9 @@ const setActive = (target: string | Cell | null) => {
     if (activeCell.value?.id === cell.id) return
     updateCellData(cell, { active: true })
     activeCell.value = { ...cell.getData() as CPW.Cell }
+
+    console.log(activeCell.value)
+    console.log(wrapRunnerCode(activeCell.value))
   } else {
     if (!activeCell.value) return
     updateCellData(activeCell.value.id, { active: false })
@@ -215,6 +257,7 @@ const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>) => {
 const delCell = (target: string | Cell) => {
   const cell = graph.removeCell(target as any)
   if (cell && activeCell.value?.id === cell.id) activeCell.value = null
+  if (cell?.shape === 'cpw-cell-node') setOutgosMap('del', cell.id)
   cell?.dispose()
   return cell
 }
@@ -224,8 +267,9 @@ const copyCell = (target: string | Cell) => {
   if (!cell || cell.shape !== 'cpw-cell-node') return
   graph.copy([cell])
   const [newCell] = graph.paste()
-  // 只复制通用信息
-  updateCellData(newCell, { id: newCell.id, outputs: [], active: false, node: undefined, status: 'changed' })
+  // 只复制通用信息, 因为没有连线，income也要清除值
+  const { incomes } = cell.getData<CPW.Cell>()
+  updateCellData(newCell, { id: newCell.id, outputs: [], active: false, node: undefined, status: 'changed', incomes: incomes.map(o => ({ ...o, value: '' })) })
   graph.cleanClipboard()
 }
 
@@ -276,8 +320,9 @@ const fileChange = useThrottleFn(
     })
     dispatchAction(props.id, { type: 'change', data: { content: JSON.stringify(json) } })
   },
-  100,
+  150,
   true,
+  false,
 )
 
 // * ---------------- toolbar --------------------
@@ -352,5 +397,54 @@ const listener = (e: CustomEvent<CPW.EventPayload<CPW.EventType>>) => {
 }
 
 window.addEventListener(`cpw-event-${props.id}`, listener as any)
+
+// * --------- dnd数据 --------------
+const cateLoading = ref(false)
+const cellCategories = shallowRef<CellCategory[]>([])
+const getCellCategories = async () => {
+  cateLoading.value = true
+  await new Promise(r => setTimeout(r, 1000))
+  cellCategories.value = _cellCategories
+  cateLoading.value = false
+}
+getCellCategories()
+
+const getPredecessors = (target: Cell | string) => {
+  const cell = typeof target === 'string' ? graph.getCellById(target) : target
+  if (!cell) return []
+  return graph.getPredecessors(cell)
+}
+
+// * ---------- cfg数据 --------------
+// const outgosMap = shallowRef<Required<TdCascaderProps>['options']>([])
+/** 所有组件的id映射其输出字段  */
+const outgosMap = ref<Record<string, string[]>>({})
+/**
+ * 新建节点、删除节点、某个节点的outgos有更改的时候需要更新outgosMap
+ */
+const setOutgosMap = (mode: 'all' | 'set' | 'del', target?: Cell | string) => {
+  if (mode === 'all') {
+    const map: UnwrapRef<typeof outgosMap> = {}
+    graph.getNodes()
+      .filter(cell => cell.shape === 'cpw-cell-node')
+      .forEach(cell => {
+        const { id, outgos } = cell.getData<CPW.Cell>()
+        if (outgos.length) map[id] = [...outgos]
+      })
+    outgosMap.value = map
+  } else if (target) {
+    if (mode === 'del') delete outgosMap.value[typeof target === 'string' ? target : target.id]
+    else if (mode === 'set') {
+      const cell = typeof target === 'string' ? graph.getCellById(target) : target
+      const { id, outgos } = cell.getData<CPW.Cell>()
+      if (outgos.length) outgosMap.value[id] = [...outgos]
+    }
+  }
+}
+
+const configChange: Required<InstanceType<typeof Cfg>>['onConfigChanged'] = (id, type, data) => {
+  updateCellData(id, data)
+  if (type === 'outgos' && data.outgos?.length) outgosMap.value[id] = [...data.outgos!]
+}
 
 </script>

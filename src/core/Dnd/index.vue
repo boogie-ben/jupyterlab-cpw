@@ -61,11 +61,16 @@ import type { Dnd } from '@antv/x6-plugin-dnd'
 import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
-import { type CellComponent, type CellCategory, cellCategory } from './utils'
-import { btnIcons, formatCellParams } from '../utils'
+import { type CellComponent, type CellCategory } from './utils'
+import { btnIcons, formatCellParams, formatCellIncomes } from '../utils'
 import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon } from 'tdesign-icons-vue-next'
+
+const props = defineProps<{
+  loading: boolean
+  data: CellCategory[]
+}>()
 
 let dnd: Dnd
 
@@ -82,11 +87,12 @@ const dbKeyword = refDebounced(keyword, 500)
 const list = computed<CellCategory[]>(() => {
   const k = dbKeyword.value.trim()
   dndExpanded.value = {}
+  if (!props.data.length) return []
   if (!k) {
-    dndExpanded.value[cellCategory[0].id] = true
-    return cellCategory
+    dndExpanded.value[props.data[0].id] = true
+    return props.data
   }
-  const res = cellCategory
+  const res = props.data
     .map(cate => ({ ...cate, children: cate.children.filter(item => item.name.includes(k)) }))
     .filter(cate => {
       const bool = !!cate.children.length
@@ -113,10 +119,19 @@ defineExpose({
     startDrag = (e: MouseEvent, item: CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
-      const { key, name, source, incomes, outgos, paramsConfig } = item
+      const { key, name, source, incomesConfig, outgos, paramsConfig } = item
+
       const node = graph.createNode({
         shape: 'cpw-cell-node',
-        data: JSON.parse(JSON.stringify({ key, name, source, incomes, outgos, params: formatCellParams(paramsConfig) })) as CPW.Cell,
+        data: {
+          key,
+          name,
+          source,
+          // 对象数组引用类型，注意要clone
+          incomes: formatCellIncomes(incomesConfig),
+          outgos: [...outgos],
+          params: formatCellParams(paramsConfig),
+        } as CPW.Cell,
       })
       dnd.start(node, e)
     }

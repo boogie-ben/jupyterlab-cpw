@@ -146,6 +146,7 @@ export const initGraph = (dom: HTMLElement) => {
         edges: graph.getEdges().map(e => ({ source: e.getSourceCellId(), target: e.getTargetCellId() })),
       }).length
     ) {
+      edge.setData({ cancel: true }, { silent: true })
       graph.removeCell(edge)
       edge.dispose()
       showErrorMessage('组件连接错误', '禁止出现回环')

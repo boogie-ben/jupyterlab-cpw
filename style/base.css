@@ -312,6 +312,11 @@
 
 .cpw-outputs[expanded=true] .cpw-outputs-header .cpw-outputs-header-resizer {
   cursor: ns-resize;
+  transition: background-color 200ms;
+}
+
+.cpw-outputs[expanded=true] .cpw-outputs-header .cpw-outputs-header-resizer:hover {
+  background-color: var(--jp-layout-color3);
 }
 
 .cpw-outputs .cpw-outputs-header .cpw-outputs-header-content {
@@ -366,10 +371,10 @@
 }
 
 .cpw-cfg .cpw-cfg-tab-item {
-  cursor: pointer;
+  /* cursor: pointer;
   line-height: 32px; 
+  text-align: center;  */
   flex: 1; 
-  text-align: center; 
   border-bottom: 1px solid var(--jp-toolbar-border-color);
 }
 
@@ -386,6 +391,6 @@
 }
 
 .cpw-cfg .cpw-cfg-footer {
-  padding: var(--pd);
+  /* padding: var(--pd); */
   border-top: 1px solid var(--jp-toolbar-border-color);
 }

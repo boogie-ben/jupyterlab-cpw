@@ -6,41 +6,34 @@ declare namespace CPW {
   }
 
   /** 组件输入配置 */
-  interface CellIncome {
-    /** 目标前序节点id */
-    fromId: string
-    /** 目标前序节点的输出变量名 */
-    fromName: string
+  interface CellIncomeConfig {
+    /** 输入值在本组件内使用的变量名 */
+    name: CellIncome['name']
+    /** 是否必选 */
+    required: boolean
     /** 输入描述 */
     desc: string
-    /** 输入值在本组件内使用的变量名 */
-    name: string
   }
 
-  /** 组件参数配置选项 */
-  // interface CellParamConfigMap {
-  //   string: { default: string }
-  //   number: { default: number }
-  //   option: { options: { label: string, value: string }[], default: string }
-  //   boolean: { default: boolean }
-  // }
+  /** 组件输入 */
+  interface CellIncome extends CellIncomeConfig {
+    /**
+     * 用字符串值表示输入
+     * 格式为 目标前序节点id|目标前序节点输出变量名
+     * fromID|fromName
+     */
+    value: string
+    // /** 目标前序节点id */
+    // fromId: string
+    // /** 目标前序节点的输出变量名 */
+    // fromName: string
+    // /** 输入描述 */
+    // desc: string
+    // /** 输入值在本组件内使用的变量名 */
+    // name: string
+  }
 
-  // type ParamType = keyof CellParamConfigMap
-
-  // type CellParamConfig = (
-  //   { type: 'string', name: string, desc: string, default?: string, required: boolean } |
-  //   { type: 'number', name: string, desc: string, default?: number, required: boolean } |
-  //   { type: 'option', name: string, desc: string, default?: string, required: boolean } |
-  //   { type: 'boolean', name: string, desc: string, default: boolean }
-  // )
-
-  // type CellParam = (
-  //   { type: 'string', name: string, desc: string, value?: string, default: string | null, required: boolean } |
-  //   { type: 'number', name: string, desc: string, value?: number, default: number | null, required: boolean } |
-  //   { type: 'boolean', name: string, desc: string, value?: boolean, default: boolean | null, required: boolean } |
-  //   { type: 'option', name: string, desc: string, value?: string, default: string | null, required: boolean, options: { label: string, value: string }[] }
-  // )
-
+  /** 组件参数 */
   interface CellParam {
     /** 参数类型 */
     type: 'str' | 'num' | 'bool' | 'opt'
@@ -49,13 +42,13 @@ declare namespace CPW {
      * 如果有默认值将填充默认值
      * 如果参数可留空，则空时的值为undefined（和td表单组件的选择器、数值输入清空状态一样）
      */
-    value: string | number | boolean | undefined
+    value: string | number | boolean | null
     /**
      * 参数默认值
      * str、num、opt类型非必选时，若无值，py运行时则会是None，不会是空字符串（跟和鲸一样）
      * bool类型固定必须，只有true或false
      */
-    default: string | number | boolean | undefined
+    default: string | number | boolean | null
     /**
      * 是否必选
      * bool类型固定必选，会忽略本字段逻辑
@@ -69,6 +62,7 @@ declare namespace CPW {
     options?: { label: string, value: string }[]
   }
 
+  /** 组件参数配置 */
   type CellParamConfig = Omit<CellParam, 'value'>
 
   type CellParamType = CellParam['type']
@@ -86,10 +80,7 @@ declare namespace CPW {
     /** 节点源代码 */
     source: string
 
-    /** 组件输入配置 */
-    incomes: CellIncome[]
-
-    /** 组件输入配置 */
+    /** 组件输出变量名配置 */
     outgos: string[]
   }
 
@@ -117,6 +108,9 @@ declare namespace CPW {
 
     /** 组件参数 */
     params: CellParam[]
+
+    /** 组件输入配置 */
+    incomes: CellIncome[]
   }
 
   interface RunnerCell {

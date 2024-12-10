@@ -59,7 +59,11 @@ export type ToolbarBtn = {
   onClick:(e: MouseEvent) => any
 }
 
-// * ------------- 组件参数处理 --------------------
+// * ------------- 组件输入、参数处理 --------------------
+export const formatCellIncomes = (configs: CPW.CellIncomeConfig[]): CPW.CellIncome[] => {
+  return configs.map(o => ({ ...o, value: '' }))
+}
+
 export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[] => {
   return configs.map((cfg) => {
     const { type, name, desc, required, options, default: _default } = cfg
@@ -72,9 +76,9 @@ export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[
       name,
       desc,
       required,
-      options,
       value,
       default: _default,
+      ...(options ? { options } : {}),
     }
   })
 }
@@ -117,7 +121,16 @@ export const wrapRunnerCode = (cpwCell: CPW.Cell) => {
   const sourceCode = source.split('\n').map(str => '    ' + str).join('\n')
 
   const incomeParams = incomes.map(({ name }) => name).join(', ')
-  const incomeArgs = incomes.map(o => `__cpw_${pid(o.fromId)}_res['${o.fromName}']`).join(', ')
+
+  let incomeArgs = incomes
+    .map(o => {
+      if (!o.value) return 'None' // 输入值没有选择则传入None
+      const [fromId, fromName] = o.value.split('|')
+      return `__cpw_${pid(fromId)}_res['${fromName}']`
+    })
+    .join(',\n    ') // 避免单行代码过长，传参使用换行
+
+  if (incomeArgs) incomeArgs = '\n    ' + incomeArgs + '\n'
 
   const outgoReturns = outgos.length
     ? '    return { ' + outgos.map(name => `'${name}': ${name}`).join(', ') + ' }'
@@ -139,13 +152,12 @@ export const wrapRunnerCode = (cpwCell: CPW.Cell) => {
       break
     case 'opt':
     case 'str':
-      // 字符串和选项类型自动包裹引号，无需像和鲸一样得用户给参数值包裹引号
-      if (!param.required && !param.value) v = 'None' // 留空时为None
-      else v = `'${param.value}'`
+      if (!param.value) v = 'None' // 留空时为None
+      else v = `'${param.value}'` // 字符串和选项类型自动包裹引号，无需像和鲸一样得用户给参数值包裹引号
       break
     case 'num':
-      if (!param.required && !param.value) v = 'None' // 留空时为None
-      else v = (parseFloat(param.value as any) || 'None') + '' // 非法值兜底也是None
+      if (typeof param.value !== 'number' || Number.isNaN(param.value)) v = 'None' // 非法值、留空时为None
+      else v = param.value + ''
     }
     return `    ${param.name} = ${v}`
   }).join('\n')

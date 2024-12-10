@@ -3,6 +3,8 @@ export interface CellComponent extends CPW.CellCommon {
   bookmark: boolean
     /** 组件参数配置 */
   paramsConfig: CPW.CellParamConfig[]
+  incomesConfig: CPW.CellIncomeConfig[]
+  outgos: string[]
 }
 
 export interface CellCategory {
@@ -12,7 +14,7 @@ export interface CellCategory {
 }
 
 // todo 接口返回的所有default === null的都换成undefined
-export const cellCategory: CellCategory[] = [
+export const _cellCategories: CellCategory[] = [
   {
     id: 'cate-1',
     name: 'cate-1',
@@ -24,17 +26,20 @@ export const cellCategory: CellCategory[] = [
         key: 'aaaaa',
         source: 'aaa = 111\nbbb = 333',
         desc: '',
-        incomes: [/* { fromId: 'adwdc-12d21', fromName: 'ddd', name: 'ccc', desc: '' } */],
+        incomesConfig: [
+          { name: 'in_1', desc: '输入1', required: true },
+          { name: 'in_2', desc: '输入2', required: false },
+        ],
         outgos: ['aaa'],
         paramsConfig: [
-          { type: 'str', default: undefined, desc: 'str必选', required: true, name: 'str_a' },
-          { type: 'str', default: undefined, desc: 'str可选', required: false, name: 'str_b' },
+          { type: 'str', default: 'awdwa', desc: 'str必选', required: true, name: 'str_a' },
+          { type: 'str', default: null, desc: 'str可选', required: false, name: 'str_b' },
 
-          { type: 'opt', default: undefined, desc: 'opt必选', required: true, name: 'opt_a', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
-          { type: 'opt', default: undefined, desc: 'opt可选', required: false, name: 'opt_b', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
+          { type: 'opt', default: null, desc: 'opt必选', required: true, name: 'opt_a', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
+          { type: 'opt', default: null, desc: 'opt可选', required: false, name: 'opt_b', options: [{ label: 'opt1', value: 'opt1' }, { label: 'opt2', value: 'opt2' }] },
 
-          { type: 'num', default: undefined, desc: 'num必选', required: true, name: 'num_a' },
-          { type: 'num', default: undefined, desc: '', required: false, name: 'num_b' },
+          { type: 'num', default: null, desc: 'num必选', required: true, name: 'num_a' },
+          { type: 'num', default: null, desc: '', required: false, name: 'num_b' },
 
           { type: 'bool', default: false, desc: 'bool', required: true, name: 'bool' },
         ],
@@ -46,7 +51,7 @@ export const cellCategory: CellCategory[] = [
         name: 'bbb',
         source: 'b = 222\nb',
         desc: '',
-        incomes: [],
+        incomesConfig: [],
         outgos: [],
         paramsConfig: [],
       },
@@ -63,7 +68,7 @@ export const cellCategory: CellCategory[] = [
         name: 'ccc',
         source: 'import IPython\nimport pandas as pd\n\ndf = pd.read_csv(\'./sample4.csv\')\ntable = df.describe()\n# IPython.display.display(table)\ntable',
         desc: '',
-        incomes: [],
+        incomesConfig: [],
         outgos: ['table'],
         paramsConfig: [],
       },
