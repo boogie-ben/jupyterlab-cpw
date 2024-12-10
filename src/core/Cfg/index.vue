@@ -145,7 +145,7 @@
 </template>
 
 <script lang="tsx" setup>
-import { ref, shallowRef, watch } from 'vue'
+import { ref, shallowRef/* , watch */ } from 'vue'
 import { paramValidator } from './utils'
 import {
   Button as TButton,
@@ -167,7 +167,6 @@ import { type TdCascaderProps } from 'tdesign-vue-next'
 const props = defineProps<{
   activeCell: CPW.Cell
   cate: CellCategory[]
-  outgosMap: Record<string, string[]>
   getPredecessors:(cell: Cell | string) => Cell[]
  }>()
 
@@ -234,6 +233,7 @@ const setIncomeOpts = () => {
       }
     })
     .filter(o => o.children.length)
+  incomeOptValues.value = vals
 }
 
 const syncIncomes = ref<CPW.CellIncome[]>(JSON.parse(JSON.stringify(props.activeCell.incomes)))
@@ -242,7 +242,7 @@ const syncIncomes = ref<CPW.CellIncome[]>(JSON.parse(JSON.stringify(props.active
 const incomeFixer = () => {
   let incomeErr = false
   syncIncomes.value.forEach(income => {
-    if (!incomeOptValues.value.includes(income.value)) {
+    if (income.value && !incomeOptValues.value.includes(income.value)) {
       incomeErr = true
       income.value = ''
     }
@@ -251,17 +251,11 @@ const incomeFixer = () => {
 }
 
 const incomeUpdater = () => {
-  console.log('incomeUpdater')
+  // console.log('incomeUpdater')
   setIncomeOpts() // 先更新选项，由选项判断fixer
   incomeFixer()
 }
-
-// 当有有组件outgo更改时，实时更新cfg的输入选项和检查表单修复
-watch(
-  () => props.outgosMap,
-  incomeUpdater,
-  { deep: true, immediate: true },
-)
+incomeUpdater()
 
 // 暴露方法，当有前序组件或者当前组件断开连接的时候，更新income配置
 defineExpose({ incomeUpdater })
