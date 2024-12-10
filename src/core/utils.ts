@@ -14,6 +14,7 @@ import {
   mdiMenuClose,
   mdiChevronRight,
   mdiHelpCircleOutline,
+  mdiClose,
 } from '@mdi/js'
 
 export const dispatchAction: CPW.DispatchAction = (id, payload) => {
@@ -48,6 +49,7 @@ export const btnIcons = {
   menuClose: mdiSvg(mdiMenuClose),
   chevronRight: mdiSvg(mdiChevronRight),
   help: mdiSvg(mdiHelpCircleOutline),
+  close: mdiSvg(mdiClose),
 }
 
 export type BtnIcon = keyof typeof btnIcons

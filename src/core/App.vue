@@ -261,7 +261,9 @@ const updateCellData = (target: string | Cell, data: Partial<CPW.Cell>, save = t
 
 const delCell = (target: string | Cell) => {
   const cell = graph.removeCell(target as any)
+  if (cell && activeCell.value?.id === cell.id) activeCell.value = null
   cell?.dispose()
+  return cell
   // 在这里不用处理cfg的incomes更新，因为如果是选中节点的父节点的话，则必会有连线，删除节点时会触发edge:removed走里面的cfg更新逻辑
 }
 

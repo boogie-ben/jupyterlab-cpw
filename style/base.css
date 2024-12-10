@@ -24,6 +24,8 @@
   --td-font-size-link-medium: 13px !important;
   --td-font-size-mark-medium: 13px !important;
   --td-font-size-title-small: 13px !important;
+  --td-font-family: var(--jp-ui-font-family) !important;
+  --td-font-family-medium: var(--jp-ui-font-family) !important;
 }
 
 /* .cpw-container { */

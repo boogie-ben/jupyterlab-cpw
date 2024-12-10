@@ -1,5 +1,6 @@
 <template>
   <div class="cpw-cfg">
+    <!-- eslint-disable vue/no-v-html -->
     <div class="cpw-cfg-name">{{ activeCell.name }}</div>
 
     <div class="cpw-cfg-tabs">
@@ -128,7 +129,40 @@
       v-else-if="currTab === 'outgos'"
       class="cpw-cfg-content"
     >
-      输出显示
+      <div
+        v-if="!syncOutgos.length"
+        style="text-align: center; line-height: 22px;"
+      >
+        无输出配置
+      </div>
+
+      <div
+        v-for="out,i in syncOutgos"
+        :key="out"
+        style="
+          display: flex;
+          align-items: center;
+          border-radius: 4px;
+          height: 32px;
+          padding: 0 12px;
+          margin-bottom: 8px;
+          background-color: var(--td-bg-color-secondarycontainer);
+          color: var(--td-text-color-primary);
+        "
+      >
+        <div
+          style="flex: 1; width: 0;"
+          class="ellipsis-1"
+        >
+          {{ out }}
+        </div>
+        <div
+          style="width: 14px; height: 14px; line-height: 0; flex-shrink: 0; cursor: pointer;"
+          @click="delOutput(i)"
+          v-html="btnIcons.close"
+        />
+      </div>
+      <!-- max-width="100%" -->
     </div>
 
     <div class="cpw-cfg-footer">
@@ -145,7 +179,7 @@
 </template>
 
 <script lang="tsx" setup>
-import { ref, shallowRef/* , watch */ } from 'vue'
+import { reactive, ref, shallowRef/* , watch */ } from 'vue'
 import { paramValidator } from './utils'
 import {
   Button as TButton,
@@ -187,6 +221,7 @@ const configChanged = useThrottleFn(
       {
         ...(type === 'params' ? { params: syncParams.value.map(c => ({ ...c })) } : {}),
         ...(type === 'incomes' ? { incomes: syncIncomes.value.map(c => ({ ...c })) } : {}),
+        ...(type === 'outgos' ? { outgos: [...syncOutgos] } : {}),
       },
     )
   },
@@ -260,6 +295,12 @@ incomeUpdater()
 // 暴露方法，当有前序组件或者当前组件断开连接的时候，更新income配置
 defineExpose({ incomeUpdater })
 
+// * --------------- 输出 ----------------
+const syncOutgos = reactive([...props.activeCell.outgos])
+const delOutput = (idx: number) => {
+  syncOutgos.splice(idx, 1)
+  configChanged('outgos')
+}
 // const IncomeRender = ({ selected }: { selected: UnwrapRef<typeof incomeOpts>[number]['children'] }) => {
 //   if (!selected.length) return ''
 //   const { cellName, label } = selected[0]

@@ -30,7 +30,7 @@ export const _cellCategories: CellCategory[] = [
           { name: 'in_1', desc: '输入1', required: true },
           { name: 'in_2', desc: '输入2', required: false },
         ],
-        outgos: ['aaa'],
+        outgos: ['aaa', 'bbb'],
         paramsConfig: [
           { type: 'str', default: 'awdwa', desc: 'str必选', required: true, name: 'str_a' },
           { type: 'str', default: null, desc: 'str可选', required: false, name: 'str_b' },
@@ -52,7 +52,7 @@ export const _cellCategories: CellCategory[] = [
         source: 'b = 222\nb',
         desc: '',
         incomesConfig: [],
-        outgos: [],
+        outgos: ['b'],
         paramsConfig: [],
       },
     ],
