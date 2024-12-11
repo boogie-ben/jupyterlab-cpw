@@ -5,34 +5,6 @@ declare namespace CPW {
     cells: import('@antv/x6').Cell.Properties[]
   }
 
-  /** 组件输入配置 */
-  interface CellIncomeConfig {
-    /** 输入值在本组件内使用的变量名 */
-    name: CellIncome['name']
-    /** 是否必选 */
-    required: boolean
-    /** 输入描述 */
-    desc: string
-  }
-
-  /** 组件输入 */
-  interface CellIncome extends CellIncomeConfig {
-    /**
-     * 用字符串值表示输入
-     * 格式为 目标前序节点id|目标前序节点输出变量名
-     * fromID|fromName
-     */
-    value: string
-    // /** 目标前序节点id */
-    // fromId: string
-    // /** 目标前序节点的输出变量名 */
-    // fromName: string
-    // /** 输入描述 */
-    // desc: string
-    // /** 输入值在本组件内使用的变量名 */
-    // name: string
-  }
-
   /** 组件参数 */
   interface CellParam {
     /** 参数类型 */
@@ -65,7 +37,44 @@ declare namespace CPW {
   /** 组件参数配置 */
   type CellParamConfig = Omit<CellParam, 'value'>
 
-  type CellParamType = CellParam['type']
+  /** 组件输入配置 */
+  interface CellIncomeConfig {
+    /** 输入值在本组件内使用的变量名 */
+    name: string
+    /** 是否必选 */
+    required: boolean
+    /** 输入描述 */
+    desc: string
+  }
+
+  /** 组件输入 */
+  interface CellIncome extends CellIncomeConfig {
+    /**
+     * 用字符串值表示输入
+     * 格式为 目标前序节点id|目标前序节点输出变量名
+     * fromID|fromName
+     */
+    value: string
+    // /** 目标前序节点id */
+    // fromId: string
+    // /** 目标前序节点的输出变量名 */
+    // fromName: string
+    // /** 输入描述 */
+    // desc: string
+    // /** 输入值在本组件内使用的变量名 */
+    // name: string
+  }
+
+  /** 组件输出配置 */
+  interface CellOutgoConfig {
+    /** 组件输出变量名 */
+    name: string
+    /** 描述 */
+    desc: string
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  interface CellOutgo extends CellOutgoConfig {}
 
   interface CellCommon {
     /** 组件名称 */
@@ -79,9 +88,6 @@ declare namespace CPW {
 
     /** 节点源代码 */
     source: string
-
-    /** 组件输出变量名配置 */
-    outgos: string[]
   }
 
   interface Cell extends CellCommon {
@@ -109,8 +115,11 @@ declare namespace CPW {
     /** 组件参数 */
     params: CellParam[]
 
-    /** 组件输入配置 */
+    /** 组件输入 */
     incomes: CellIncome[]
+
+    /** 组件输出 */
+    outgos: CellOutgo[]
   }
 
   interface RunnerCell {

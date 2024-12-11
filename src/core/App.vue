@@ -447,7 +447,7 @@ const getPredecessors = (target: Cell | string) => {
 //   }
 // }
 
-const configChange: Required<InstanceType<typeof Cfg>>['onConfigChanged'] = (id, type, data) => {
+const configChange: Required<InstanceType<typeof Cfg>>['onConfigChanged'] = (id, data) => {
   updateCellData(id, data)
   // if (type === 'outgos' && data.outgos?.length) outgosMap.value[id] = [...data.outgos!]
 }

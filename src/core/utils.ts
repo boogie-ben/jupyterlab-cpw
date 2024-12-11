@@ -12,9 +12,6 @@ import {
   mdiMemory,
   mdiMenuOpen,
   mdiMenuClose,
-  mdiChevronRight,
-  mdiHelpCircleOutline,
-  mdiClose,
 } from '@mdi/js'
 
 export const dispatchAction: CPW.DispatchAction = (id, payload) => {
@@ -35,6 +32,7 @@ export const kernelStatusLabel: Record<Kernel.Status, string> = {
 
 const mdiSvg = (path: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="${path}" /></svg>`
 
+/** 给toolbar和contextmenu用的svg字符串，方便传参，并且避免了t-icon的svg精灵图请求 */
 export const btnIcons = {
   save: mdiSvg(mdiContentSave),
   runSingle: mdiSvg(mdiPlay),
@@ -47,9 +45,6 @@ export const btnIcons = {
   delete: mdiSvg(mdiTrashCan),
   menuOpen: mdiSvg(mdiMenuOpen),
   menuClose: mdiSvg(mdiMenuClose),
-  chevronRight: mdiSvg(mdiChevronRight),
-  help: mdiSvg(mdiHelpCircleOutline),
-  close: mdiSvg(mdiClose),
 }
 
 export type BtnIcon = keyof typeof btnIcons
@@ -62,10 +57,6 @@ export type ToolbarBtn = {
 }
 
 // * ------------- 组件输入、参数处理 --------------------
-export const formatCellIncomes = (configs: CPW.CellIncomeConfig[]): CPW.CellIncome[] => {
-  return configs.map(o => ({ ...o, value: '' }))
-}
-
 export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[] => {
   return configs.map((cfg) => {
     const { type, name, desc, required, options, default: _default } = cfg
@@ -80,9 +71,17 @@ export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[
       required,
       value,
       default: _default,
-      ...(options ? { options } : {}),
+      ...(options && { options: JSON.parse(JSON.stringify(options)) }),
     }
   })
+}
+
+export const formatCellIncomes = (configs: CPW.CellIncomeConfig[]): CPW.CellIncome[] => {
+  return configs.map(o => ({ ...o, value: '' }))
+}
+
+export const formatCellOutgos = (configs: CPW.CellOutgoConfig[]): CPW.CellOutgo[] => {
+  return configs.map(o => ({ ...o }))
 }
 
 // * ----------- 流水线运行解析 ----------
@@ -135,14 +134,14 @@ export const wrapRunnerCode = (cpwCell: CPW.Cell) => {
   if (incomeArgs) incomeArgs = '\n    ' + incomeArgs + '\n'
 
   const outgoReturns = outgos.length
-    ? '    return { ' + outgos.map(name => `'${name}': ${name}`).join(', ') + ' }'
+    ? '    return { ' + outgos.map(({ name }) => `'${name}': ${name}`).join(', ') + ' }'
     : ''
 
   const excute = outgos.length
     ? `__cpw_${id}_res = __cpw_${id}_func(${incomeArgs})`
     : `__cpw_${id}_func(${incomeArgs})`
 
-  const outgoRenders = outgos.map(name => `IPython.display.display(__cpw_${id}_res['${name}'])`).join('\n')
+  const outgoRenders = outgos.map(({ name }) => `IPython.display.display(__cpw_${id}_res['${name}'])`).join('\n')
 
   const paramDeclares = params.map(param => {
     let v = 'None'

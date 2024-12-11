@@ -19,6 +19,15 @@
   text-overflow: ellipsis;
 }
 
+.t-dialog.full-content-dialog {
+  display: flex;
+  flex-direction: column;
+}
+.t-dialog.full-content-dialog .t-dialog__body {
+  flex: 1;
+  height: 0;
+}
+
 :root {
   --td-font-size-body-medium: 13px !important;
   --td-font-size-link-medium: 13px !important;
@@ -395,4 +404,30 @@
 .cpw-cfg .cpw-cfg-footer {
   /* padding: var(--pd); */
   border-top: 1px solid var(--jp-toolbar-border-color);
+}
+
+/* ------------- 组件配置 ----------------- */
+.cpw-cell-editor-section {
+  display: flex;
+  margin-bottom: 24px;
+  color: var(--td-text-color-primary);
+}
+
+.cpw-cell-editor-section-label {
+  /* line-height: ; */
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.cpw-cell-editor-section-content {
+  flex: 1;
+}
+
+.cpw-cell-editor-section-content .t-table .t-table__content {
+  border: 1px solid var(--td-component-border);
+  border-bottom: none;
+}
+.cpw-cell-editor-section-content .t-table .t-table__content th {
+  color: var(--td-text-color-secondary);
+  background-color: var(--td-bg-color-secondarycontainer);
 }

@@ -4,7 +4,7 @@ export interface CellComponent extends CPW.CellCommon {
     /** 组件参数配置 */
   paramsConfig: CPW.CellParamConfig[]
   incomesConfig: CPW.CellIncomeConfig[]
-  outgos: string[]
+  outgosConfig: CPW.CellOutgoConfig[]
 }
 
 export interface CellCategory {
@@ -30,7 +30,7 @@ export const _cellCategories: CellCategory[] = [
           { name: 'in_1', desc: '输入1', required: true },
           { name: 'in_2', desc: '输入2', required: false },
         ],
-        outgos: ['aaa', 'bbb'],
+        outgosConfig: [{ name: 'aaa', desc: '' }, { name: 'bbb', desc: 'csad' }],
         paramsConfig: [
           { type: 'str', default: 'awdwa', desc: 'str必选', required: true, name: 'str_a' },
           { type: 'str', default: null, desc: 'str可选', required: false, name: 'str_b' },
@@ -52,7 +52,7 @@ export const _cellCategories: CellCategory[] = [
         source: 'b = 222\nb',
         desc: '',
         incomesConfig: [],
-        outgos: ['b'],
+        outgosConfig: [],
         paramsConfig: [],
       },
     ],
@@ -69,7 +69,7 @@ export const _cellCategories: CellCategory[] = [
         source: 'import IPython\nimport pandas as pd\n\ndf = pd.read_csv(\'./sample4.csv\')\ntable = df.describe()\n# IPython.display.display(table)\ntable',
         desc: '',
         incomesConfig: [],
-        outgos: ['table'],
+        outgosConfig: [{ name: 'table', desc: '' }],
         paramsConfig: [],
       },
     ],

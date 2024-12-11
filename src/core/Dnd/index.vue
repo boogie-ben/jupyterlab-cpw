@@ -32,10 +32,9 @@
           :title="cate.name"
           @click="toogleExpand(cate.id)"
         >
-          <div
+          <ChevronRightIcon
             class="cpw-dnd-category-icon"
             :expanded="dndExpanded[cate.id]"
-            v-html="btnIcons.chevronRight"
           />
           <div class="cpw-dnd-category-label">{{ cate.name }}</div>
         </div>
@@ -62,10 +61,10 @@ import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
 import { type CellComponent, type CellCategory } from './utils'
-import { btnIcons, formatCellParams, formatCellIncomes } from '../utils'
+import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../utils'
 import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
-import { PlusIcon } from 'tdesign-icons-vue-next'
+import { PlusIcon, ChevronRightIcon } from 'tdesign-icons-vue-next'
 
 const props = defineProps<{
   loading: boolean
@@ -119,7 +118,7 @@ defineExpose({
     startDrag = (e: MouseEvent, item: CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
-      const { key, name, source, incomesConfig, outgos, paramsConfig } = item
+      const { key, name, source, incomesConfig, outgosConfig, paramsConfig } = item
 
       const node = graph.createNode({
         shape: 'cpw-cell-node',
@@ -129,7 +128,7 @@ defineExpose({
           source,
           // 对象数组引用类型，注意要clone
           incomes: formatCellIncomes(incomesConfig),
-          outgos: [...outgos],
+          outgos: formatCellOutgos(outgosConfig),
           params: formatCellParams(paramsConfig),
         } as CPW.Cell,
       })
