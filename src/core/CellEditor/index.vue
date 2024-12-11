@@ -4,7 +4,7 @@
     attach="body"
     :close-on-esc-keydown="false"
     :close-on-overlay-click="false"
-    width="80%"
+    width="84%"
     top="8vh"
     :dialog-style="{ height: '80vh' }"
     dialog-class-name="full-content-dialog cpw-cell-editor-dialog"
@@ -17,88 +17,65 @@
       style="height: 100%; overflow: auto; padding-right: 24px"
       class="cpw-cell-editor"
     >
-      <div class="cpw-cell-editor-section">
-        <div class="cpw-cell-editor-section-label">组件名称</div>
-        <div class="cpw-cell-editor-section-content">
-          <t-input
-            v-model="editCell.name"
-            clearable
-            style="width: 50%; max-width: 400px;"
-            :maxcharacter="30"
-            show-limit-number
-          />
-        </div>
-      </div>
+      <EditorSection label="组件名称">
+        <t-input
+          v-model="editCell.name"
+          clearable
+          style="width: 50%; max-width: 400px;"
+          :maxcharacter="30"
+          show-limit-number
+        />
+      </EditorSection>
 
-      <div class="cpw-cell-editor-section">
-        <div class="cpw-cell-editor-section-label">组件描述</div>
-        <div class="cpw-cell-editor-section-content">
-          <t-textarea
-            v-model="editCell.desc"
-            clearable
-            :autosize="{ maxRows: 3, minRows: 3 }"
-            style="width: 50%; max-width: 400px;"
-          />
-        </div>
-      </div>
+      <EditorSection label="组件描述">
+        <t-textarea
+          v-model="editCell.desc"
+          clearable
+          :autosize="{ maxRows: 3, minRows: 3 }"
+          style="width: 50%; max-width: 400px;"
+        />
+      </EditorSection>
 
-      <div class="cpw-cell-editor-section">
-        <div class="cpw-cell-editor-section-label">类别</div>
-        <div class="cpw-cell-editor-section-content">
-          <t-select
-            v-model="editCell.category"
-            clearable
-            filterable
-            :options="cateOptions"
-            :disabled="mode === 'edit'"
-            style="width: 50%; max-width: 400px;"
-          />
-        </div>
-      </div>
+      <EditorSection label="类别">
+        <t-select
+          v-model="editCell.category"
+          clearable
+          filterable
+          :options="cateOptions"
+          :disabled="mode === 'edit'"
+          style="width: 50%; max-width: 400px;"
+        />
+      </EditorSection>
+      <EditorSection label="参数">
+        <t-base-table
+          row-key="rowKey"
+          :data="editCell.paramsConfig"
+          :columns="(paramsColumns as any)"
+        >
+          <template #actions="{ rowIndex }">
+            <Edit1Icon
+              style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer; margin-right: 8px"
+              @click="editParam(editCell.paramsConfig[rowIndex])"
+            />
+            <CloseIcon
+              style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer;"
+              @click="editCell.paramsConfig.splice(rowIndex, 1)"
+            />
+          </template>
 
-      <div class="cpw-cell-editor-section">
-        <div class="cpw-cell-editor-section-label">参数</div>
-        <div class="cpw-cell-editor-section-content">
-          <t-base-table
-            row-key="rowKey"
-            :data="editCell.paramsConfig"
-            :columns="(paramsColumns as any)"
-          >
-            <template #name="{ rowIndex }">
-              {{ editCell.paramsConfig[rowIndex].name }}
-              <!-- <t-input
-                v-model="editCell.paramsConfig[rowIndex].name"
-                clearable
-              /> -->
-            </template>
-
-            <template #type="{ rowIndex }">{{ paramTypeMap[editCell.paramsConfig[rowIndex].type] }}</template>
-
-            <template #actions="{ rowIndex }">
-              <Edit1Icon
-                style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer; margin-right: 8px"
-                @click="editParam(editCell.paramsConfig[rowIndex])"
-              />
-              <CloseIcon
-                style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer;"
-                @click="editCell.paramsConfig.splice(rowIndex, 1)"
-              />
-            </template>
-
-            <template #footerSummary>
-              <t-button
-                content="新增"
-                block
-                variant="dashed"
-                theme="primary"
-                @click="editParam()"
-              >
-                <template #icon><PlusIcon /></template>
-              </t-button>
-            </template>
-          </t-base-table>
-        </div>
-      </div>
+          <template #footerSummary>
+            <t-button
+              content="新增"
+              block
+              variant="dashed"
+              theme="primary"
+              @click="editParam()"
+            >
+              <template #icon><PlusIcon /></template>
+            </t-button>
+          </template>
+        </t-base-table>
+      </EditorSection>
     </div>
 
     <t-drawer
@@ -113,7 +90,7 @@
     >
       <t-form
         label-align="top"
-        style="--td-comp-margin-xxl: var(--td-line-height-body-small); --td-comp-paddingLR-xl: 0px;"
+        style="--td-comp-margin-xxl: 12px; --td-comp-paddingLR-xl: 0px;"
       >
         <t-form-item label="变量名">
           <t-input
@@ -127,7 +104,7 @@
           <t-textarea
             v-model="tempParam.desc"
             clearable
-            :autosize="{ maxRows: 3, minRows: 3 }"
+            :autosize="{ maxRows: 2, minRows: 2 }"
             style="width: 100%;"
           />
         </t-form-item>
@@ -135,7 +112,6 @@
         <t-form-item label="类型">
           <t-select
             v-model="tempParam.type"
-            clearable
             :options="paramTypeOpts"
             style="width: 100%;"
             @change="paramTypeChange"
@@ -147,6 +123,46 @@
           label="选项"
         >
           <!-- todo 选项配置 -->
+          <div style="width: 100%">
+            <div style="display: flex; align-items: center; margin-bottom: 4px; padding-right: 20px;">
+              <div style="flex: 1; text-align: center">Label</div>
+              <div style="flex: 1; text-align: center">Value</div>
+            </div>
+            <t-input-group
+              v-for="opt, i in tempParam.options"
+              :key="i"
+              style="width: 100%; margin-bottom: 8px; align-items: center;"
+            >
+              <t-input
+                v-model="opt.label"
+                style="flex: 1; width: 0;"
+                placeholder="Label"
+                align="center"
+                size="small"
+              />
+              <t-input
+                v-model="opt.value"
+                style="flex: 1; width: 0;"
+                placeholder="Value"
+                align="center"
+                size="small"
+              />
+              <CloseIcon
+                style="font-size: 16px; cursor: pointer; margin-left: 4px; line-height: 0"
+                @click="tempParam.options!.splice(i, 1)"
+              />
+            </t-input-group>
+            <t-button
+              content="添加"
+              variant="text"
+              block
+              theme="primary"
+              size="small"
+              @click="tempParam.options?.push({ label: '', value: '' })"
+            >
+              <template #icon><PlusIcon /></template>
+            </t-button>
+          </div>
         </t-form-item>
 
         <t-form-item label="默认值">
@@ -177,6 +193,7 @@
         <t-form-item
           v-if="tempParam.type !== 'bool'"
           label="是否必填"
+          label-align="left"
         >
           <t-checkbox v-model="tempParam.required" />
         </t-form-item>
@@ -189,6 +206,7 @@
 import {
   Dialog as TDialog,
   Input as TInput,
+  InputGroup as TInputGroup,
   Textarea as TTextarea,
   Select as TSelect,
   BaseTable as TBaseTable,
@@ -201,12 +219,15 @@ import {
   RadioGroup as TRadioGroup,
   RadioButton as TRadioButton,
   type TableProps,
+  MessagePlugin,
 } from 'tdesign-vue-next'
 import { computed, ref } from 'vue'
 import type { CellComponent, CellCategory } from '../Dnd/utils'
 import { objectOmit } from '@vueuse/core'
 import { v4 } from 'uuid'
 import { PlusIcon, Edit1Icon, CloseIcon } from 'tdesign-icons-vue-next'
+import EditorSection from './EditorSection.vue'
+import { isLegalPythonIdentifier } from '../utils'
 
 const props = defineProps<{ cate: CellCategory[] }>()
 
@@ -332,22 +353,7 @@ const editParam = (param?: EditorCell['paramsConfig'][number]) => {
   }
   editParamVisible.value = true
 }
-const editParamClose = () => {
-  tempParam.value = newParam()
-  editParamKey.value = null
-}
-const editParamDone = () => {
-  const newP = tempParam.value.type === 'opt' ? tempParam.value : objectOmit(tempParam.value, ['options'])
-  // todo 校验
-  if (editParamKey.value) {
-    const param = editCell.value.paramsConfig.find(c => c.rowKey === editParamKey.value)
-    if (param) Object.assign(param, newP)
-  } else {
-    editCell.value.paramsConfig.push({ ...newP, rowKey: v4() })
-  }
-  editParamVisible.value = false
-  editParamClose()
-}
+
 const paramTypeChange = () => {
   switch (tempParam.value.type) {
   case 'opt':
@@ -364,6 +370,37 @@ const paramTypeChange = () => {
     tempParam.value.default = false
   }
 }
+
+const editParamClose = () => {
+  tempParam.value = newParam()
+  editParamKey.value = null
+}
+const editParamDone = () => {
+  // MessagePlugin
+  // const pm = tempParam.value.type === 'opt' ? tempParam.value : objectOmit(tempParam.value, ['options'])
+  const pm = { ...tempParam.value }
+  if (!isLegalPythonIdentifier(pm.name)) return MessagePlugin.error('变量名不合法')
+  if (pm.type === 'opt') {
+    if (!pm.options?.length) return MessagePlugin.error('请指定选项')
+    if (pm.options.some(o => !o.label || !o.value)) return MessagePlugin.error('选项Label和Value不能为空')
+    if (pm.default) {
+      if (!pm.options.some(o => o.value === pm.default)) return MessagePlugin.error('指定的默认值不是一个有效的备选项')
+    } else pm.default = '' // 避免clear之后undefined
+  } else {
+    delete pm.options
+  }
+  if (pm.type === 'num' && typeof pm.default !== 'number') pm.default = null
+
+  if (editParamKey.value) {
+    const param = editCell.value.paramsConfig.find(c => c.rowKey === editParamKey.value)
+    if (param) Object.assign(param, pm)
+  } else {
+    editCell.value.paramsConfig.push({ ...pm, rowKey: v4() })
+  }
+  editParamVisible.value = false
+  editParamClose()
+}
+
 /**
  * ---------------- 信息 --------------
  * 组件名 组件描述 类别

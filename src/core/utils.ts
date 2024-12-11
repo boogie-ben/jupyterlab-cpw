@@ -84,6 +84,19 @@ export const formatCellOutgos = (configs: CPW.CellOutgoConfig[]): CPW.CellOutgo[
   return configs.map(o => ({ ...o }))
 }
 
+// Python 3.11 中的关键字列表，可根据Python版本更新此列表
+const pythonKeywords = [
+  'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break',
+  'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally',
+  'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal',
+  'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield',
+]
+const pyidReg = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+export const isLegalPythonIdentifier = (name: string) => {
+  if (!name || !pyidReg.test(name)) return false
+  return !pythonKeywords.includes(name)
+}
+
 // * ----------- 流水线运行解析 ----------
 const getIncomNode = (graph: Graph, node: Cell) => {
   return (graph.getIncomingEdges(node) || []).map(e => e.getSourceNode()!)
