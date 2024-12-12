@@ -197,6 +197,7 @@
     <CellEditor
       ref="_CellEditor"
       :cate="cate"
+      @done="update"
     />
   </div>
 </template>
@@ -216,8 +217,8 @@ import {
   Cascader as TCascader,
 } from 'tdesign-vue-next'
 import { formatCellIncomes, formatCellOutgos, formatCellParams } from '../utils'
-import { useThrottleFn } from '@vueuse/core'
-import type { CellCategory } from '../Dnd/utils'
+import { cloneFnJSON, useThrottleFn } from '@vueuse/core'
+import type { CellCategory, CellComponent } from '../Dnd/utils'
 import type { Cell } from '@antv/x6'
 import { type TdCascaderProps } from 'tdesign-vue-next'
 import { showDialog, Dialog, showErrorMessage } from '@jupyterlab/apputils'
@@ -258,7 +259,7 @@ const configChanged = useThrottleFn(
 )
 
 // * --------------- 参数 ----------------
-const syncParams = ref<CPW.CellParam[]>(JSON.parse(JSON.stringify(props.activeCell.params)))
+const syncParams = ref<CPW.CellParam[]>(cloneFnJSON(props.activeCell.params))
 
 const FormLabel = ({ config, hideoptional }: { config: CPW.CellParam | CPW.CellIncome, hideoptional?: boolean }) => {
   return <div style="display: flex; align-items: center; column-gap: 4px;">
@@ -294,7 +295,7 @@ const setIncomeOpts = () => {
   incomeOptValues.value = vals
 }
 
-const syncIncomes = ref<CPW.CellIncome[]>(JSON.parse(JSON.stringify(props.activeCell.incomes)))
+const syncIncomes = ref<CPW.CellIncome[]>(cloneFnJSON(props.activeCell.incomes))
 
 // 检测已有的输入值是否合法，如果有失效值，如本来有的前序连线断开，则需要清除失效的已选输入
 const incomeFixer = () => {
@@ -340,11 +341,13 @@ const syncInfo = ref({
   desc: props.activeCell.desc,
   source: props.activeCell.source,
 })
-// todo 对话框更新config时，重新执行
 
-const CellEditorRef = useTemplateRef('_CellEditor')
-const edit = () => {
-  CellEditorRef.value?.openEdit(props.activeCell)
+const updateAll = (c: Omit<CellComponent, 'bookmark' | 'key'>) => {
+  const { paramsConfig, incomesConfig, outgosConfig, name, desc, source } = c
+  syncParams.value = formatCellParams(paramsConfig)
+  syncIncomes.value = formatCellIncomes(incomesConfig)
+  syncOutgos.value = formatCellOutgos(outgosConfig)
+  syncInfo.value = { name, desc, source }
 }
 
 const reset = async () => {
@@ -359,14 +362,22 @@ const reset = async () => {
   if (button.label !== '重置') return
   const exist = props.cate.find(c => c.children.find(item => {
     if (item.key !== props.activeCell.key) return false
-    const { paramsConfig, incomesConfig, outgosConfig, name, desc, source } = item
-    syncParams.value = formatCellParams(paramsConfig)
-    syncIncomes.value = formatCellIncomes(incomesConfig)
-    syncOutgos.value = formatCellOutgos(outgosConfig)
-    syncInfo.value = { name, desc, source }
+    updateAll(item)
     return true
   }))
   if (exist) configChanged('reset')
   else showErrorMessage('重置组件失败', '组件列表中无此组件，或已被删除')
 }
+
+// todo 对话框更新config时，重新执行
+const CellEditorRef = useTemplateRef('_CellEditor')
+const edit = () => {
+  CellEditorRef.value?.openEdit(props.activeCell)
+}
+
+const update: InstanceType<typeof CellEditor>['onDone'] = (c) => {
+  updateAll(c)
+  configChanged('reset')
+}
+
 </script>

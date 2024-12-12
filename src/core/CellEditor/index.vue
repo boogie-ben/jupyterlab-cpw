@@ -326,7 +326,7 @@ import {
 } from 'tdesign-vue-next'
 import { computed, ref, useTemplateRef } from 'vue'
 import type { CellComponent, CellCategory } from '../Dnd/utils'
-import { objectOmit } from '@vueuse/core'
+import { cloneFnJSON, objectOmit } from '@vueuse/core'
 import { v4 } from 'uuid'
 import { PlusIcon, Edit1Icon, CloseIcon } from 'tdesign-icons-vue-next'
 import EditorSection from './EditorSection.vue'
@@ -390,10 +390,10 @@ function openEdit (cell: CPW.Cell) {
     paramsConfig: params.map(param => {
       const p = objectOmit(param, ['value'])
       // options避免引用
-      if (p.options) p.options = JSON.parse(JSON.stringify(p.options))
+      if (p.options) p.options = cloneFnJSON(p.options)
       return {
         ...objectOmit(param, ['value']),
-        ...(p.options && { options: JSON.parse(JSON.stringify(p.options)) }),
+        ...(p.options && { options: cloneFnJSON(p.options) }),
         rowKey: v4(),
       }
     }),
@@ -557,21 +557,28 @@ const comfirm = async () => {
   const { name: _name, desc, category, incomesConfig, outgosConfig, paramsConfig } = editCell.value
 
   const name = _name.trim()
-  if (!name) return MessagePlugin.error('请输入组件名')
+  if (!name) return MessagePlugin.error('请指定组件名')
 
   const isNew = mode.value === 'new'
 
   if (isNew && !category) MessagePlugin.error('请选择组件类别')
 
-  // 参数在新增时已经校验
+  const incomeIdentifiers: string[] = []
 
   for (const income of incomesConfig) {
+    if (!income.name.trim()) return MessagePlugin.error('输入变量不能为空')
     if (!isLegalPythonIdentifier(income.name)) return MessagePlugin.error(`输入变量名 "${income.name}" 不合法`)
+    incomeIdentifiers.push(income.name)
   }
 
   for (const outgo of outgosConfig) {
+    if (!outgo.name.trim()) return MessagePlugin.error('输出变量不能为空')
     if (!isLegalPythonIdentifier(outgo.name)) return MessagePlugin.error(`输出变量名 "${outgo.name}" 不合法`)
   }
+
+  // 参数配置在新增时已经校验，在此只需要判断重复
+  const identifiers = incomeIdentifiers.concat(paramsConfig.map(p => p.name))
+  if (identifiers.length !== (new Set(identifiers)).size) return MessagePlugin.error('参数/输出变量名重复')
 
   const source = editor.model.sharedModel.getSource()
   if (!source.trim()) return MessagePlugin.error('请输入组件代码')
@@ -581,9 +588,9 @@ const comfirm = async () => {
     desc,
     category,
     source,
-    paramsConfig: paramsConfig.map(o => objectOmit(o, ['rowKey'])),
-    incomesConfig: incomesConfig.map(o => objectOmit(o, ['rowKey'])),
-    outgosConfig: outgosConfig.map(o => objectOmit(o, ['rowKey'])),
+    paramsConfig,
+    incomesConfig,
+    outgosConfig,
   }
 
   if (!isNew) {

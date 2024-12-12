@@ -11,8 +11,9 @@
       <Dnd
         ref="_dndRef"
         :loading="cateLoading"
-        :data="cellCategories"
+        :cate="cellCategories"
         :collapsed="dndCollapsed"
+        @refresh-category="getCellCategories"
       />
 
       <div

@@ -17,40 +17,51 @@
         theme="primary"
         variant="text"
         shape="square"
+        @click="openNew"
       >
         <template #icon><PlusIcon size="20px" /></template>
       </t-button>
     </div>
 
-    <div class="cpw-dnd-content">
+    <t-loading
+      class="cpw-dnd-content"
+      :loading="loading"
+      :delay="200"
+      size="small"
+    >
       <template
-        v-for="cate in list"
-        :key="cate.id"
+        v-for="item in list"
+        :key="item.id"
       >
         <div
           class="cpw-dnd-category"
-          :title="cate.name"
-          @click="toogleExpand(cate.id)"
+          :title="item.name"
+          @click="toogleExpand(item.id)"
         >
           <ChevronRightIcon
             class="cpw-dnd-category-icon"
-            :expanded="dndExpanded[cate.id]"
+            :expanded="dndExpanded[item.id]"
           />
-          <div class="cpw-dnd-category-label">{{ cate.name }}</div>
+          <div class="cpw-dnd-category-label">{{ item.name }}</div>
         </div>
-        <template v-if="dndExpanded[cate.id]">
+        <template v-if="dndExpanded[item.id]">
           <div
-            v-for="item in cate.children"
-            :key="item.key"
+            v-for="c in item.children"
+            :key="c.key"
             class="cpw-dnd-component"
             :title="item.name"
-            @mousedown="e => startDrag(e, item)"
+            @mousedown="e => startDrag(e, c)"
           >
-            {{ item.name }}
+            {{ c.name }}
           </div>
         </template>
       </template>
-    </div>
+    </t-loading>
+    <CellEditor
+      ref="_CellEditor"
+      :cate="cate"
+      @done="emit('refreshCategory')"
+    />
   </div>
 </template>
 
@@ -62,14 +73,17 @@ import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vu
 import { initDnd } from '../Graph'
 import { type CellComponent, type CellCategory } from './utils'
 import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../utils'
-import { Input as TInput, Button as TButton } from 'tdesign-vue-next'
+import { Input as TInput, Button as TButton, Loading as TLoading } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon, ChevronRightIcon } from 'tdesign-icons-vue-next'
+import CellEditor from '../CellEditor/index.vue'
 
 const props = defineProps<{
   loading: boolean
-  data: CellCategory[]
+  cate: CellCategory[]
 }>()
+
+const emit = defineEmits(['refreshCategory'])
 
 let dnd: Dnd
 
@@ -86,12 +100,12 @@ const dbKeyword = refDebounced(keyword, 500)
 const list = computed<CellCategory[]>(() => {
   const k = dbKeyword.value.trim()
   dndExpanded.value = {}
-  if (!props.data.length) return []
+  if (!props.cate.length) return []
   if (!k) {
-    dndExpanded.value[props.data[0].id] = true
-    return props.data
+    dndExpanded.value[props.cate[0].id] = true
+    return props.cate
   }
-  const res = props.data
+  const res = props.cate
     .map(cate => ({ ...cate, children: cate.children.filter(item => item.name.includes(k)) }))
     .filter(cate => {
       const bool = !!cate.children.length
@@ -138,4 +152,9 @@ defineExpose({
 })
 
 onBeforeUnmount(() => dnd?.dispose())
+
+const CellEditorRef = useTemplateRef('_CellEditor')
+const openNew = () => {
+  CellEditorRef.value?.openNew()
+}
 </script>

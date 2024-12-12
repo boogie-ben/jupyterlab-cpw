@@ -139,11 +139,11 @@
 }
 
 .cpw-dnd .cpw-dnd-header {
-  padding: 4px;
+  padding: 6px;
   width: 100%;
   display: flex;
   align-items: center;
-  column-gap: 4px;
+  column-gap: 6px;
 }
 
 .cpw-dnd .cpw-dnd-content {

@@ -13,6 +13,7 @@ import {
   mdiMenuOpen,
   mdiMenuClose,
 } from '@mdi/js'
+import { cloneFnJSON } from '@vueuse/core'
 
 export const dispatchAction: CPW.DispatchAction = (id, payload) => {
   window.dispatchEvent(new CustomEvent(`cpw-action-${id}`, { detail: payload }))
@@ -71,7 +72,7 @@ export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[
       required,
       value,
       default: _default,
-      ...(options && { options: JSON.parse(JSON.stringify(options)) }),
+      ...(options && { options: cloneFnJSON(options) }),
     }
   })
 }
