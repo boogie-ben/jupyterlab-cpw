@@ -9,12 +9,13 @@
     :dialog-style="{ height: '80vh' }"
     dialog-class-name="full-content-dialog cpw-cell-editor-dialog"
     :header="modeLabel[mode]"
-    :confirm-btn="{ content: '保存', onClick: comfirm, loading: false }"
+    :confirm-btn="{ content: '保存', onClick: comfirm, loading }"
     destroy-on-close
     @closed="closed"
+    @opened="initEditor"
   >
     <div
-      style="height: 100%; overflow: auto; padding-right: 24px"
+      style="height: 100%; overflow: auto; padding-right: 24px; min-width: 950px"
       class="cpw-cell-editor"
     >
       <EditorSection label="组件名称">
@@ -46,11 +47,16 @@
           style="width: 50%; max-width: 400px;"
         />
       </EditorSection>
-      <EditorSection label="参数">
+
+      <EditorSection
+        label="参数"
+        desc="参数指定的变量名可以直接在组件代码中读取值，若运行时参数值留空，值将会是None。"
+      >
         <t-base-table
           row-key="rowKey"
           :data="editCell.paramsConfig"
           :columns="(paramsColumns as any)"
+          style="--empty-height: 47px"
         >
           <template #actions="{ rowIndex }">
             <Edit1Icon
@@ -58,7 +64,7 @@
               @click="editParam(editCell.paramsConfig[rowIndex])"
             />
             <CloseIcon
-              style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer;"
+              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
               @click="editCell.paramsConfig.splice(rowIndex, 1)"
             />
           </template>
@@ -75,6 +81,103 @@
             </t-button>
           </template>
         </t-base-table>
+      </EditorSection>
+
+      <EditorSection
+        label="输入"
+        desc="输入指定的变量名可以直接在组件代码中读取值，在运行时可指定接收任意上游组件的任意输出值。若运行时无指定输入值，值将会是None"
+      >
+        <t-base-table
+          row-key="rowKey"
+          :data="editCell.incomesConfig"
+          :columns="(incomesColumns as any)"
+        >
+          <template #name="{ rowIndex }">
+            <t-input
+              v-model="editCell.incomesConfig[rowIndex].name"
+              style="width: 100%;"
+            />
+          </template>
+
+          <template #desc="{ rowIndex }">
+            <t-input
+              v-model="editCell.incomesConfig[rowIndex].desc"
+              style="width: 100%;"
+            />
+          </template>
+
+          <template #required="{ rowIndex }"><t-checkbox v-model="editCell.incomesConfig[rowIndex].required" /></template>
+
+          <template #actions="{ rowIndex }">
+            <CloseIcon
+              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
+              @click="editCell.incomesConfig.splice(rowIndex, 1)"
+            />
+          </template>
+
+          <template #footerSummary>
+            <t-button
+              content="新增"
+              block
+              variant="dashed"
+              theme="primary"
+              @click="newIncome"
+            >
+              <template #icon><PlusIcon /></template>
+            </t-button>
+          </template>
+        </t-base-table>
+      </EditorSection>
+
+      <EditorSection
+        label="输出"
+        desc="输出代码中指定的变量名，并且可以被下游组件的输入接收值。注意指定的输出变量必须在组件代码中存在"
+      >
+        <t-base-table
+          row-key="rowKey"
+          :data="editCell.outgosConfig"
+          :columns="outgosColumns"
+        >
+          <template #name="{ rowIndex }">
+            <t-input
+              v-model="editCell.outgosConfig[rowIndex].name"
+              style="width: 100%;"
+            />
+          </template>
+
+          <template #desc="{ rowIndex }">
+            <t-input
+              v-model="editCell.outgosConfig[rowIndex].desc"
+              style="width: 100%;"
+            />
+          </template>
+
+          <template #actions="{ rowIndex }">
+            <CloseIcon
+              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
+              @click="editCell.outgosConfig.splice(rowIndex, 1)"
+            />
+          </template>
+
+          <template #footerSummary>
+            <t-button
+              content="新增"
+              block
+              variant="dashed"
+              theme="primary"
+              @click="newOutgo"
+            >
+              <template #icon><PlusIcon /></template>
+            </t-button>
+          </template>
+        </t-base-table>
+      </EditorSection>
+
+      <EditorSection
+        label="代码"
+        desc="组件代码中请勿使用return"
+      >
+        <div ref="_code" />
       </EditorSection>
     </div>
 
@@ -180,7 +283,6 @@
             placeholder="None"
             theme="column"
           />
-
           <t-radio-group
             v-else-if="tempParam.type === 'bool'"
             v-model="(tempParam.default as boolean)"
@@ -193,6 +295,7 @@
         <t-form-item
           v-if="tempParam.type !== 'bool'"
           label="是否必填"
+          label-width="70px"
           label-align="left"
         >
           <t-checkbox v-model="tempParam.required" />
@@ -218,23 +321,26 @@ import {
   InputNumber as TInputNumber,
   RadioGroup as TRadioGroup,
   RadioButton as TRadioButton,
-  type TableProps,
   MessagePlugin,
+  type TableProps,
 } from 'tdesign-vue-next'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import type { CellComponent, CellCategory } from '../Dnd/utils'
 import { objectOmit } from '@vueuse/core'
 import { v4 } from 'uuid'
 import { PlusIcon, Edit1Icon, CloseIcon } from 'tdesign-icons-vue-next'
 import EditorSection from './EditorSection.vue'
 import { isLegalPythonIdentifier } from '../utils'
+import { CodeEditor } from '@jupyterlab/codeeditor'
+import { CodeMirrorEditorFactory, type CodeMirrorEditor } from '@jupyterlab/codemirror'
+import { extensions, languages } from './codeEditor'
 
 const props = defineProps<{ cate: CellCategory[] }>()
 
 interface EditorCell extends Pick<CellComponent, 'category' | 'name' | 'desc' | 'source'> {
-  incomesConfig: (CPW.CellIncomeConfig & { rowKey: string })[]
-  outgosConfig: (CPW.CellOutgoConfig & { rowKey: string })[]
-  paramsConfig: (CPW.CellParamConfig & { rowKey: string })[]
+  incomesConfig: (CPW.CellIncomeConfig & { rowKey?: string })[]
+  outgosConfig: (CPW.CellOutgoConfig & { rowKey?: string })[]
+  paramsConfig: (CPW.CellParamConfig & { rowKey?: string })[]
 }
 
 interface Emits {
@@ -302,28 +408,23 @@ defineExpose({ openNew, openEdit })
 // * ------------ 类别 -----------
 const cateOptions = computed(() => props.cate.map(c => ({ label: c.name, value: c.id })))
 
-// todo 校验变量名的合法
 // * ---------------- 参数 --------------
 const paramsColumns: TableProps<EditorCell['paramsConfig'][number]>['columns'] = [
-  { title: '变量名', colKey: 'name', ellipsis: true },
+  { title: '变量名', colKey: 'name', width: 250, ellipsis: true },
   { title: '类型', cell: 'type', width: 100 },
   {
     title: '默认值',
     cell: (h, { row }) => row.type === 'bool' ? (row.default ? 'True' : 'False') : (row.default === null ? '' : `${row.default}`),
     ellipsis: true,
   },
-  { title: '是否必填', cell: (h, { row }) => row.required ? '是' : '', width: 100 },
   { title: '参数描述', colKey: 'desc', ellipsis: true },
-  { title: '操作', cell: 'actions', width: 120 },
+  { title: '是否必填', cell: (h, { row }) => row.required ? '是' : '', width: 100, align: 'center' },
+  { title: '操作', cell: 'actions', width: 100, align: 'center' },
 ]
 
 type ParamType = CPW.CellParamConfig['type']
-const paramTypeMap: Record<ParamType, string> = {
-  str: '字符串',
-  num: '数值',
-  opt: '选项',
-  bool: '布尔值',
-}
+const paramTypeMap: Record<ParamType, string> = { str: '字符串', num: '数值', opt: '选项', bool: '布尔值' }
+
 const paramTypeOpts = Object.entries(paramTypeMap).map(([value, label]) => ({ label, value }))
 
 const newParam = (): Omit<EditorCell['paramsConfig'][number], 'rowKey'> => ({
@@ -349,7 +450,7 @@ const editParam = (param?: EditorCell['paramsConfig'][number]) => {
       desc,
       options: options ? options.map(o => ({ ...o })) : [],
     }
-    editParamKey.value = rowKey
+    editParamKey.value = rowKey!
   }
   editParamVisible.value = true
 }
@@ -367,7 +468,7 @@ const paramTypeChange = () => {
     tempParam.value.default = null
     break
   case 'bool':
-    tempParam.value.default = false
+    tempParam.value.default = true
   }
 }
 
@@ -401,37 +502,105 @@ const editParamDone = () => {
   editParamClose()
 }
 
-/**
- * ---------------- 信息 --------------
- * 组件名 组件描述 类别
- *
- * ---------------- 参数 --------------
- * 变量名 类型 默认值 可选 说明
- *
- * ---------------- 输入 --------------
- * 变量名 可选 说明
- *
- * ---------------- 输出 --------------
- * 变量名
- *
- * ---------------- 代码 --------------
- *
- */
+// * ----------- 输入 --------------
+const incomesColumns: TableProps['columns'] = [
+  { title: '变量名', cell: 'name', width: 250 },
+  { title: '说明', colKey: 'desc' },
+  { title: '是否必填', cell: 'required', width: 100, align: 'center' },
+  { title: '操作', cell: 'actions', width: 100, align: 'center' },
+]
+
+const newIncome = () => {
+  editCell.value.incomesConfig.push({ name: '', desc: '', required: true, rowKey: v4() })
+}
+
+// * ----------- 输出 --------------
+const outgosColumns: TableProps['columns'] = [
+  { title: '变量名', cell: 'name', width: 250 },
+  { title: '说明', colKey: 'desc' },
+  { title: '操作', cell: 'actions', width: 100, align: 'center' },
+]
+
+const newOutgo = () => {
+  editCell.value.outgosConfig.push({ name: '', desc: '', rowKey: v4() })
+}
+
+// * -------------- 代码 -----------------
+const codeRef = useTemplateRef('_code')
+let editor: CodeMirrorEditor
+const initEditor = () => {
+  const factory = new CodeMirrorEditorFactory({ extensions, languages })
+  const model = new CodeEditor.Model({ mimeType: 'text/x-python' })
+  if (editCell.value.source.length) model.sharedModel.setSource(editCell.value.source)
+  editor = factory.newInlineEditor({
+    host: codeRef.value!,
+    model,
+    // 可以打印extensions查看所有可选的配置
+    config: {
+      // mode: 'text/x-python',
+      lineNumbers: false,
+      lineWrap: false, // 行内容溢出不换行，而是显示滚动条
+      // readOnly: false,
+    },
+  })
+}
 
 // * -----------------------
 const closed = () => {
   editCell.value = newCell()
+  editor?.dispose()
+  // @ts-ignore
+  editor = null
 }
-
+const loading = ref(false)
 const comfirm = async () => {
-  // todo 校验
-  // todo 如果是new则调新增接口，并emit
-  // todo 如果是edit则直接emit
-  visible.value = false
+  const { name: _name, desc, category, incomesConfig, outgosConfig, paramsConfig } = editCell.value
+
+  const name = _name.trim()
+  if (!name) return MessagePlugin.error('请输入组件名')
+
+  const isNew = mode.value === 'new'
+
+  if (isNew && !category) MessagePlugin.error('请选择组件类别')
+
+  // 参数在新增时已经校验
+
+  for (const income of incomesConfig) {
+    if (!isLegalPythonIdentifier(income.name)) return MessagePlugin.error(`输入变量名 "${income.name}" 不合法`)
+  }
+
+  for (const outgo of outgosConfig) {
+    if (!isLegalPythonIdentifier(outgo.name)) return MessagePlugin.error(`输出变量名 "${outgo.name}" 不合法`)
+  }
+
+  const source = editor.model.sharedModel.getSource()
+  if (!source.trim()) return MessagePlugin.error('请输入组件代码')
+
+  const cell: EditorCell = {
+    name,
+    desc,
+    category,
+    source,
+    paramsConfig: paramsConfig.map(o => objectOmit(o, ['rowKey'])),
+    incomesConfig: incomesConfig.map(o => objectOmit(o, ['rowKey'])),
+    outgosConfig: outgosConfig.map(o => objectOmit(o, ['rowKey'])),
+  }
+
+  if (!isNew) {
+    visible.value = false
+    emit('done', cell)
+    return
+  }
+
+  loading.value = true
+  try {
+    await new Promise(r => setTimeout(r, 1000))
+    visible.value = false
+    emit('done', cell)
+  } catch (err: any) {
+    MessagePlugin.error(err.message)
+  }
+  loading.value = false
 }
-
-// const open: Open = (type, cell) => {
-
-// }
 
 </script>

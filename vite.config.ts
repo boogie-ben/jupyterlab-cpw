@@ -15,7 +15,7 @@ const outDirSrc = resolve('./lib/src')
 export default defineConfig(({ mode }) => {
   return {
     plugins: [
-      nodeExternals(),
+      nodeExternals({ devDeps: true, builtins: true }),
       vue(),
       vueJsx(),
       dts({
@@ -40,7 +40,9 @@ export default defineConfig(({ mode }) => {
         // external: (source) => source.includes('node_modules'),
         output: [{
           format: 'es' as any,
-          entryFileNames: '[name].js',
+          // entryFileNames: '[name].js',
+          // 去除src/目录层级
+          entryFileNames: info => info.name.replace('src/', '') + '.js',
           preserveModules: true,
         }],
       },

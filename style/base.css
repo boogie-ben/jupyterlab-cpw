@@ -19,6 +19,13 @@
   text-overflow: ellipsis;
 }
 
+.t-dialog,
+.t-dialog *,
+.t-drawer,
+.t-drawer * {
+  box-sizing: border-box;
+}
+
 .t-dialog.full-content-dialog {
   display: flex;
   flex-direction: column;
@@ -427,7 +434,39 @@
   border: 1px solid var(--td-component-border);
   border-bottom: none;
 }
+
 .cpw-cell-editor-section-content .t-table .t-table__content th {
   color: var(--td-text-color-secondary);
   background-color: var(--td-bg-color-secondarycontainer);
+}
+
+.cpw-cell-editor-section-content .t-table .t-table__empty {
+  min-height: var(--empty-height, 57px);
+}
+
+.cpw-cell-editor-section-content .jp-CodeMirrorEditor {
+  border: 1px solid var(--td-component-border);
+  transition-property: border-color;
+  transition-duration: 200ms;
+}
+
+.cpw-cell-editor-section-content .jp-CodeMirrorEditor.jp-mod-focused {
+  border-color: var(--td-brand-color);
+}
+
+.cpw-cell-editor-section-content .jp-CodeMirrorEditor .cm-editor {
+  /* min-height: 50px; */
+  max-height: 300px;
+  background-color: var(--jp-cell-editor-background);
+  transition-property: box-shadow, background-color;
+  transition-duration: 200ms;
+}
+
+.cpw-cell-editor-section-content .jp-CodeMirrorEditor.jp-mod-focused .cm-editor {
+  box-shadow: var(--jp-cell-editor-box-shadow);
+  background-color: var(--jp-cell-editor-active-background);
+}
+
+.cpw-cell-editor-section-content .jp-CodeMirrorEditor .cm-editor .cm-scroller {
+  overflow: auto;
 }
