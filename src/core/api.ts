@@ -35,7 +35,7 @@ const request = async <T = any>(
 
 export const reqCategories = (): Promise<CPW.CellCategory[]> => request('/api/component/project_categories/')
   .then(data => data.map((cate: any) => {
-    const comps = cate.children.map((a: any) => a)
+    const comps = cate.children.map((a: any) => a) // todo转换部分字段名
     return {
       id: cate.id,
       name: cate.name,
