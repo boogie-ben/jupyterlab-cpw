@@ -10,8 +10,6 @@
     <div class="cpw-graph-warpper">
       <Dnd
         ref="_dndRef"
-        :loading="cateLoading"
-        :cate="cellCategories"
         :collapsed="dndCollapsed"
         @refresh-category="getCellCategories"
       />
@@ -26,12 +24,10 @@
         ref="_cfgRef"
         :key="activeCell.id"
         :active-cell="activeCell"
-        :cate="cellCategories"
         :get-predecessors="getPredecessors"
         :collapsed="cfgCollapsed"
-        @config-changed="configChange"
+        @config-changed="updateCellData"
       />
-      <!-- :outgos-map="outgosMap" -->
 
       <Outputs
         :id="id"
@@ -79,21 +75,20 @@
 
 <script lang="ts" setup>
 /* eslint-disable no-throw-literal */
-import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef/* , type UnwrapRef */ } from 'vue'
-import { dispatchAction, btnIcons, type ToolbarBtn, wrapRunnerCode, getRunnerCellsToTarget } from './utils'
+import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
+import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
+import { wrapRunnerCode, getRunnerCellsToTarget } from './cellHandlers'
 import type { Kernel } from '@jupyterlab/services'
 import type { Graph, Cell } from '@antv/x6'
 import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem, portConfig } from './Graph'
-// import { throttle } from 'lodash-es'
 import Toolbar from './Toolbar/index.vue'
 import { useThrottleFn } from '@vueuse/core'
-// import { Dnd } from '@antv/x6-plugin-dnd'
 import Dnd from './Dnd/index.vue'
-import { type CellCategory, _cellCategories } from './Dnd/utils'
 import Outputs from './Outputs/index.vue'
 import { showErrorMessage } from '@jupyterlab/apputils'
 import Cfg from './Cfg/index.vue'
-// import { type TdCascaderProps } from 'tdesign-vue-next'
+import { reqCategories } from './api'
+import { MessagePlugin } from 'tdesign-vue-next'
 
 const props = defineProps<{
   id: string
@@ -405,52 +400,24 @@ const listener = (e: CustomEvent<CPW.EventPayload<CPW.EventType>>) => {
 window.addEventListener(`cpw-event-${props.id}`, listener as any)
 
 // * --------- dnd数据 --------------
-const cateLoading = ref(false)
-const cellCategories = shallowRef<CellCategory[]>([])
 const getCellCategories = async () => {
-  cateLoading.value = true
-  await new Promise(r => setTimeout(r, 1000))
-  cellCategories.value = _cellCategories
-  cateLoading.value = false
+  if (window.__cpw_categories_loading.value) return
+  window.__cpw_categories_loading.value = true
+  try {
+    const data = await reqCategories()
+    window.__cpw_categories.value = data
+  } catch (err: any) {
+    MessagePlugin.error(err.message)
+  }
+  window.__cpw_categories_loading.value = false
 }
-getCellCategories()
+
+if (!window.__cpw_categories.value.length) getCellCategories()
 
 const getPredecessors = (target: Cell | string) => {
   const cell = getCell(target)
   if (!cell) return []
   return graph.getPredecessors(cell)
-}
-
-// * ---------- cfg数据 --------------
-// // const outgosMap = shallowRef<Required<TdCascaderProps>['options']>([])
-// /** 所有组件的id映射其输出字段  */
-// const outgosMap = ref<Record<string, string[]>>({})
-// /**
-//  * 新建节点、删除节点、某个节点的outgos有更改的时候需要更新outgosMap
-//  */
-// const setOutgosMap = (mode: 'all' | 'set' | 'del', target?: Cell | string) => {
-//   if (mode === 'all') {
-//     const map: UnwrapRef<typeof outgosMap> = {}
-//     graph.getNodes()
-//       .filter(cell => cell.shape === 'cpw-cell-node')
-//       .forEach(cell => {
-//         const { id, outgos } = cell.getData<CPW.Cell>()
-//         if (outgos.length) map[id] = [...outgos]
-//       })
-//     outgosMap.value = map
-//   } else if (target) {
-//     if (mode === 'del') delete outgosMap.value[typeof target === 'string' ? target : target.id]
-//     else if (mode === 'set') {
-//       const cell = typeof target === 'string' ? graph.getCellById(target) : target
-//       const { id, outgos } = cell.getData<CPW.Cell>()
-//       if (outgos.length) outgosMap.value[id] = [...outgos]
-//     }
-//   }
-// }
-
-const configChange: Required<InstanceType<typeof Cfg>>['onConfigChanged'] = (id, data) => {
-  updateCellData(id, data)
-  // if (type === 'outgos' && data.outgos?.length) outgosMap.value[id] = [...data.outgos!]
 }
 
 </script>

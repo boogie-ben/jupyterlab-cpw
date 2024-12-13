@@ -6,7 +6,7 @@
     :close-on-overlay-click="false"
     width="84%"
     top="8vh"
-    :dialog-style="{ height: '80vh' }"
+    :dialog-style="{ height: '80vh', border: 'none', overflow: 'hidden' }"
     dialog-class-name="full-content-dialog cpw-cell-editor-dialog"
     :header="modeLabel[mode]"
     :confirm-btn="{ content: '保存', onClick: comfirm, loading }"
@@ -131,7 +131,7 @@
 
       <EditorSection
         label="输出"
-        desc="输出代码中指定的变量名，并且可以被下游组件的输入接收值。注意指定的输出变量必须在组件代码中存在"
+        desc="指定输出组件中指定的变量名，所有的输出值都会被渲染，并且可以被下游组件的输入接收值。注意指定的输出变量必须在组件代码中存在。"
       >
         <t-base-table
           row-key="rowKey"
@@ -325,7 +325,6 @@ import {
   type TableProps,
 } from 'tdesign-vue-next'
 import { computed, ref, useTemplateRef } from 'vue'
-import type { CellComponent, CellCategory } from '../Dnd/utils'
 import { cloneFnJSON, objectOmit } from '@vueuse/core'
 import { v4 } from 'uuid'
 import { PlusIcon, Edit1Icon, CloseIcon } from 'tdesign-icons-vue-next'
@@ -334,10 +333,11 @@ import { isLegalPythonIdentifier } from '../utils'
 import { CodeEditor } from '@jupyterlab/codeeditor'
 import { CodeMirrorEditorFactory, type CodeMirrorEditor } from '@jupyterlab/codemirror'
 import { extensions, languages } from './codeEditor'
+import { reqCreateComponent } from '../api'
 
-const props = defineProps<{ cate: CellCategory[] }>()
+const categories = computed(() => window.__cpw_categories.value)
 
-interface EditorCell extends Pick<CellComponent, 'category' | 'name' | 'desc' | 'source'> {
+interface EditorCell extends Pick<CPW.CellComponent, 'category' | 'name' | 'desc' | 'source'> {
   incomesConfig: (CPW.CellIncomeConfig & { rowKey?: string })[]
   outgosConfig: (CPW.CellOutgoConfig & { rowKey?: string })[]
   paramsConfig: (CPW.CellParamConfig & { rowKey?: string })[]
@@ -379,7 +379,7 @@ function openNew () {
 
 function openEdit (cell: CPW.Cell) {
   const { key, name, desc, source, incomes, outgos, params } = cell
-  const category = props.cate.find(c => c.children.some(o => o.key === key))?.id || ''
+  const category = categories.value.find(c => c.children.some(o => o.key === key))?.id || ''
   editCell.value = {
     category,
     name,
@@ -406,7 +406,7 @@ function openEdit (cell: CPW.Cell) {
 defineExpose({ openNew, openEdit })
 
 // * ------------ 类别 -----------
-const cateOptions = computed(() => props.cate.map(c => ({ label: c.name, value: c.id })))
+const cateOptions = computed(() => categories.value.map(c => ({ label: c.name, value: c.id })))
 
 // * ---------------- 参数 --------------
 const paramsColumns: TableProps<EditorCell['paramsConfig'][number]>['columns'] = [
@@ -561,7 +561,7 @@ const comfirm = async () => {
 
   const isNew = mode.value === 'new'
 
-  if (isNew && !category) MessagePlugin.error('请选择组件类别')
+  if (isNew && !category) return MessagePlugin.error('请选择组件类别')
 
   const incomeIdentifiers: string[] = []
 
@@ -588,9 +588,9 @@ const comfirm = async () => {
     desc,
     category,
     source,
-    paramsConfig,
-    incomesConfig,
-    outgosConfig,
+    paramsConfig: paramsConfig.map(o => objectOmit(o, ['rowKey'])),
+    incomesConfig: incomesConfig.map(o => objectOmit(o, ['rowKey'])),
+    outgosConfig: outgosConfig.map(o => objectOmit(o, ['rowKey'])),
   }
 
   if (!isNew) {
@@ -601,7 +601,7 @@ const comfirm = async () => {
 
   loading.value = true
   try {
-    await new Promise(r => setTimeout(r, 1000))
+    await reqCreateComponent(123123, cell)
     visible.value = false
     emit('done', cell)
   } catch (err: any) {

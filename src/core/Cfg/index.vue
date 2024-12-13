@@ -196,14 +196,13 @@
 
     <CellEditor
       ref="_CellEditor"
-      :cate="cate"
       @done="update"
     />
   </div>
 </template>
 
 <script lang="tsx" setup>
-import { ref, shallowRef, useTemplateRef } from 'vue'
+import { computed, ref, shallowRef, useTemplateRef } from 'vue'
 import { paramValidator } from './utils'
 import {
   Button as TButton,
@@ -216,9 +215,8 @@ import {
   Tooltip as TTooltip,
   Cascader as TCascader,
 } from 'tdesign-vue-next'
-import { formatCellIncomes, formatCellOutgos, formatCellParams } from '../utils'
+import { formatCellIncomes, formatCellOutgos, formatCellParams } from '../cellHandlers'
 import { cloneFnJSON, useThrottleFn } from '@vueuse/core'
-import type { CellCategory, CellComponent } from '../Dnd/utils'
 import type { Cell } from '@antv/x6'
 import { type TdCascaderProps } from 'tdesign-vue-next'
 import { showDialog, Dialog, showErrorMessage } from '@jupyterlab/apputils'
@@ -227,9 +225,10 @@ import CellEditor from '../CellEditor/index.vue'
 
 const props = defineProps<{
   activeCell: CPW.Cell
-  cate: CellCategory[]
   getPredecessors:(cell: Cell | string) => Cell[]
  }>()
+
+const categories = computed(() => window.__cpw_categories.value)
 
 const tabs = { params: '参数', incomes: '输入', outgos: '输出' }
 type ConfigType = keyof typeof tabs
@@ -267,7 +266,7 @@ const FormLabel = ({ config, hideoptional }: { config: CPW.CellParam | CPW.CellI
     { !hideoptional && !config.required && <div style="flex-shrink: 0; color: var(--td-text-color-secondary);">(可选)</div> }
     {
       config.desc && <TTooltip content={config.desc} placement="top">
-        <HelpCircleIcon style="flex-shrink: 0; color: var(--td-brand-color); font-size: 16px; line-height: 0;" />
+        <HelpCircleIcon style="flex-shrink: 0; color: var(--td-brand-color); font-size: 14px; line-height: 0;" />
       </TTooltip>
     }
   </div>
@@ -342,7 +341,7 @@ const syncInfo = ref({
   source: props.activeCell.source,
 })
 
-const updateAll = (c: Omit<CellComponent, 'bookmark' | 'key'>) => {
+const updateAll = (c: Omit<CPW.CellComponent, 'bookmark' | 'key'>) => {
   const { paramsConfig, incomesConfig, outgosConfig, name, desc, source } = c
   syncParams.value = formatCellParams(paramsConfig)
   syncIncomes.value = formatCellIncomes(incomesConfig)
@@ -360,7 +359,7 @@ const reset = async () => {
     defaultButton: 0,
   })
   if (button.label !== '重置') return
-  const exist = props.cate.find(c => c.children.find(item => {
+  const exist = categories.value.find(c => c.children.find(item => {
     if (item.key !== props.activeCell.key) return false
     updateAll(item)
     return true

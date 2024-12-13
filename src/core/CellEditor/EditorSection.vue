@@ -6,7 +6,7 @@
         v-if="desc"
         :content="desc"
       >
-        <HelpCircleIcon style="line-height: 0; font-size: 16px; color: var(--td-brand-color); vertical-align: text-top; margin-left: 4px;" />
+        <HelpCircleIcon style="line-height: 0; font-size: 14px; color: var(--td-brand-color); vertical-align: text-top; margin-left: 4px;" />
       </t-tooltip>
     </div>
     <div class="cpw-cell-editor-section-content">

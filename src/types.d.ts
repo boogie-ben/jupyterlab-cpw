@@ -1,3 +1,11 @@
+/// <reference types="vite/client" />
+
+interface Window {
+  /** 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应 */
+  __cpw_categories: import('vue').ShallowRef<CPW.CellCategory[]>
+  __cpw_categories_loading: import('vue').Ref<boolean>
+}
+
 declare namespace CPW {
 
   /** .cpw文件的JSON模型 */
@@ -129,6 +137,21 @@ declare namespace CPW {
     readonly code: string
     /** 本次运行时组件的层级 */
     readonly level: number
+  }
+
+  interface CellComponent extends CellCommon {
+    category: string
+    bookmark: boolean
+      /** 组件参数配置 */
+    paramsConfig: CPW.CellParamConfig[]
+    incomesConfig: CPW.CellIncomeConfig[]
+    outgosConfig: CPW.CellOutgoConfig[]
+  }
+
+  interface CellCategory {
+    id: string
+    name: string
+    children: CellComponent[]
   }
 
   /**

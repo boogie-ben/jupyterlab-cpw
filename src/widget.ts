@@ -5,6 +5,7 @@ import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
 import { renderCPW } from './core/index'
 import { showErrorMessage } from '@jupyterlab/apputils'
+import { ref, shallowRef } from 'vue'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
@@ -37,6 +38,10 @@ class CPWWidget extends Widget {
       }
       // console.log(this)
       window.addEventListener(`cpw-action-${this.id}`, this)
+      if (!Object.hasOwnProperty.call(window, '__cpw_categories_loading')) {
+        window.__cpw_categories_loading = ref(false)
+        window.__cpw_categories = shallowRef([])
+      }
       renderCPW(this.node, this.id, this._context.model.toString())
     })
   }

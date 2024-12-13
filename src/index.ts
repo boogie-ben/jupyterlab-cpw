@@ -1,15 +1,13 @@
 import {
-  JupyterFrontEnd,
+  type JupyterFrontEnd,
   type JupyterFrontEndPlugin,
   ILayoutRestorer,
 } from '@jupyterlab/application'
-
 import { ILauncher } from '@jupyterlab/launcher'
 import { WidgetTracker } from '@jupyterlab/apputils'
 import { type CPWDocumentWidget, CPWFactory } from './widget'
 import { ITranslator } from '@jupyterlab/translation'
 import { LabIcon } from '@jupyterlab/ui-components'
-
 import 'tdesign-vue-next/es/style/index.css'
 
 // console.log(Icon)

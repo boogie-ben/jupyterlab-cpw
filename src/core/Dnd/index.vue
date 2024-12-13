@@ -25,7 +25,7 @@
 
     <t-loading
       class="cpw-dnd-content"
-      :loading="loading"
+      :loading="categories_loading"
       :delay="200"
       size="small"
     >
@@ -59,7 +59,6 @@
     </t-loading>
     <CellEditor
       ref="_CellEditor"
-      :cate="cate"
       @done="emit('refreshCategory')"
     />
   </div>
@@ -71,17 +70,14 @@ import type { Dnd } from '@antv/x6-plugin-dnd'
 import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
-import { type CellComponent, type CellCategory } from './utils'
-import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../utils'
+import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../cellHandlers'
 import { Input as TInput, Button as TButton, Loading as TLoading } from 'tdesign-vue-next'
 import { refDebounced } from '@vueuse/core'
 import { PlusIcon, ChevronRightIcon } from 'tdesign-icons-vue-next'
 import CellEditor from '../CellEditor/index.vue'
 
-const props = defineProps<{
-  loading: boolean
-  cate: CellCategory[]
-}>()
+const categories = computed(() => window.__cpw_categories.value)
+const categories_loading = computed(() => window.__cpw_categories_loading.value)
 
 const emit = defineEmits(['refreshCategory'])
 
@@ -97,15 +93,15 @@ const toogleExpand = (id: string) => {
 const keyword = ref('')
 const dbKeyword = refDebounced(keyword, 500)
 
-const list = computed<CellCategory[]>(() => {
+const list = computed<CPW.CellCategory[]>(() => {
   const k = dbKeyword.value.trim()
   dndExpanded.value = {}
-  if (!props.cate.length) return []
+  if (!categories.value.length) return []
   if (!k) {
-    dndExpanded.value[props.cate[0].id] = true
-    return props.cate
+    dndExpanded.value[categories.value[0].id] = true
+    return categories.value
   }
-  const res = props.cate
+  const res = categories.value
     .map(cate => ({ ...cate, children: cate.children.filter(item => item.name.includes(k)) }))
     .filter(cate => {
       const bool = !!cate.children.length
@@ -115,7 +111,7 @@ const list = computed<CellCategory[]>(() => {
   return res
 })
 
-let startDrag: (e: MouseEvent, item: CellComponent) => any
+let startDrag: (e: MouseEvent, item: CPW.CellComponent) => any
 
 // const startDrag = (e: MouseEvent, item: CellComponent) => {
 //   const { key, name, source } = item
@@ -129,7 +125,7 @@ let startDrag: (e: MouseEvent, item: CellComponent) => any
 defineExpose({
   init: (graph: Graph) => {
     dnd = initDnd(graph, dndDom.value!)
-    startDrag = (e: MouseEvent, item: CellComponent) => {
+    startDrag = (e: MouseEvent, item: CPW.CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
       const { key, name, source, incomesConfig, outgosConfig, paramsConfig } = item
