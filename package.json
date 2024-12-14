@@ -42,6 +42,7 @@
         "clean:labextension": "rimraf jupyterlab_cpw/labextension jupyterlab_cpw/_version.py",
         "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
         "install:extension": "jlpm build",
+        "dev-proxy": "node ./dev-proxy.js",
         "watch": "run-p watch:src watch:labextension",
         "watch:src": "vite build --watch --mode=dev",
         "watch:labextension": "jupyter labextension watch --development True ."

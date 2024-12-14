@@ -5,15 +5,15 @@ const XSRF_HEADER_NAME = 'X-Csrftoken'
 
 const isDev = import.meta.env.MODE === 'dev'
 
+const cookies = parseCookies(document.cookie)
+
 const request = async <T = any>(
   url: string,
-  init?: RequestInit & { params?: Record<string, any>, baseUrl?: string },
+  init?: RequestInit & { params?: Record<string, any> },
 ): Promise<T> => {
   // 开发环境先跑dev-proxy.js脚本
   const u = new URL(url, isDev ? 'http://localhost:8889' : window.location.origin)
   if (init?.params) Object.entries(init.params).forEach(([key, value]) => u.searchParams.set(key, value))
-
-  const cookies = parseCookies(document.cookie)
 
   const res = await fetch(u.href, {
     headers: {
@@ -33,22 +33,38 @@ const request = async <T = any>(
   return data.data
 }
 
-export const reqCategories = (): Promise<CPW.CellCategory[]> => request('/api/component/project_categories/')
-  .then(data => data.map((cate: any) => {
-    const comps = cate.children.map((a: any) => a) // todo转换部分字段名
-    return {
-      id: cate.id,
-      name: cate.name,
-      children: comps,
-    } as CPW.CellCategory
-  }),
-  )
+export const reqCategories = (): Promise<CPW.CellCategory[]> =>
+  request('/api/component/project_categories/')
+    .then(data =>
+      data.map((cate: any) => {
+        const comps = cate.children.map((c: any) => {
+          const { category, description, inputConfig, outputConfig, paramsConfig, source, id, name } = c
+          return {
+            key: id,
+            name,
+            desc: description || '',
+            category,
+            bookmark: false,
+            paramsConfig: paramsConfig || [],
+            incomesConfig: inputConfig || [],
+            outgosConfig: outputConfig || [],
+            source,
+          } as CPW.CellComponent
+        }) // todo转换部分字段名
+
+        return {
+          id: cate.key,
+          name: cate.name,
+          children: comps,
+        } as CPW.CellCategory
+      }),
+    )
 
 export const reqCreateComponent = (project_id: number, cell: any) => {
   const { name, desc, category, source, paramsConfig, incomesConfig, outgosConfig } = cell
   const payload = {
     name,
-    desc,
+    description: desc,
     category,
     source,
     paramsConfig,

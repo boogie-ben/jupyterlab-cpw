@@ -30,9 +30,15 @@
   display: flex;
   flex-direction: column;
 }
+
 .t-dialog.full-content-dialog .t-dialog__body {
   flex: 1;
   height: 0;
+}
+
+/* jupyter的样式给所有button设置了rd，给td的button重新设置一下 */
+.jp-ThemedContainer .t-button:not(.t-button--shape-round, .t-button--shape-circle) {
+  border-radius: var(--td-radius-default);
 }
 
 :root {

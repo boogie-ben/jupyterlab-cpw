@@ -25,7 +25,7 @@ const node: Node = getNode()
 
 const defaultData: CPW.Cell = {
   id: node.id,
-  key: '',
+  key: -1,
   name: '',
   source: '',
   status: 'changed',

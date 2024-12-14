@@ -128,13 +128,14 @@ defineExpose({
     startDrag = (e: MouseEvent, item: CPW.CellComponent) => {
       if (e.button !== 0) return
       e.preventDefault()
-      const { key, name, source, incomesConfig, outgosConfig, paramsConfig } = item
+      const { key, name, desc, source, incomesConfig, outgosConfig, paramsConfig } = item
 
       const node = graph.createNode({
         shape: 'cpw-cell-node',
         data: {
           key,
           name,
+          desc,
           source,
           // 对象数组引用类型，注意要clone
           incomes: formatCellIncomes(incomesConfig),

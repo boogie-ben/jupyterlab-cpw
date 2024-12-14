@@ -25,8 +25,7 @@ const server = http.createServer((req, res) => {
     res,
     {
       target: PROXY_URL,
-      changeOrigin: true,
-      headers: { Referer: PROXY_URL, Origin: PROXY_URL, Host: PROXY_URL.replace('https://') },
+      headers: { Referer: PROXY_URL, Origin: PROXY_URL, Host: PROXY_URL.replace('https://', '') },
     },
   )
 })

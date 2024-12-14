@@ -89,7 +89,7 @@ declare namespace CPW {
     name: string
 
     /** 组件类型，也就是左侧组件dnd里源组件key */
-    key: string
+    key: number
 
     /** 组件描述说明 */
     desc: string
