@@ -35,7 +35,7 @@ const request = async <T = any>(
 
 /** 获取组件目录 */
 export const reqCategories = (): Promise<CPW.CellCategory[]> =>
-  request('/api/component/project_categories/')
+  request('/api/component/project_categories/', { params: { project_id: window.__CPW_DATA.project_id } })
     .then(data =>
       data.map((cate: any) => {
         const comps = cate.children.map((c: any) => {
@@ -62,7 +62,7 @@ export const reqCategories = (): Promise<CPW.CellCategory[]> =>
     )
 
 /** 创建组件配置 */
-export const reqCreateComponent = (project_id: number, cell: any) => {
+export const reqCreateComponent = (cell: any) => {
   const { name, desc, category, source, paramsConfig, incomesConfig, outgosConfig } = cell
   const payload = {
     name,
@@ -72,12 +72,32 @@ export const reqCreateComponent = (project_id: number, cell: any) => {
     paramsConfig,
     inputConfig: incomesConfig,
     outputConfig: outgosConfig,
-    project_id,
+    project_id: window.__CPW_DATA.project_id,
   }
   return request('/api/component/', { method: 'POST', body: JSON.stringify(payload) })
 }
 
 /** 删除组件配置 */
-export const reqDelComponent = (id: number) => {
-  return request(`/api/component/${id}/`, { method: 'DELETE' })
-}
+export const reqDelComponent = (id: number) => request(`/api/component/${id}/`, { method: 'DELETE' })
+
+/** 已收藏组件id */
+export const reqBookmarkedComponents = () =>
+  request<number[]>('/api/component/project_favorites/', { params: { project_id: window.__CPW_DATA.project_id } })
+
+/** 收藏组件 */
+export const reqBookmarkComponent = (id: number) => request(
+  '/api/component/add_project_favorites/',
+  {
+    method: 'POST',
+    body: JSON.stringify({ component_ids: [id], project_id: window.__CPW_DATA.project_id }),
+  },
+)
+
+/** 取消收藏组件 */
+export const reqUnBookmarkComponent = (id: number) => request(
+  '/api/component/remove_project_favorites/',
+  {
+    method: 'POST',
+    body: JSON.stringify({ component_ids: [id], project_id: window.__CPW_DATA.project_id }),
+  },
+)

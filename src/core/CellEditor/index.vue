@@ -334,7 +334,7 @@ import { CodeMirrorEditorFactory, type CodeMirrorEditor } from '@jupyterlab/code
 import { extensions, languages } from './codeEditor'
 import { reqCreateComponent } from '../api'
 
-const categories = computed(() => window.__cpw_categories.value)
+const categories = computed(() => window.__CPW_DATA.categories.value)
 
 interface EditorCell extends Pick<CPW.CellComponent, 'category' | 'name' | 'desc' | 'source'> {
   incomesConfig: (CPW.CellIncomeConfig & { rowKey?: string })[]
@@ -601,7 +601,7 @@ const comfirm = async () => {
   loading.value = true
   try {
     // todo 读hub的project_id
-    await reqCreateComponent(123123, cell)
+    await reqCreateComponent(cell)
     visible.value = false
     emit('done', cell)
   } catch (err: any) {

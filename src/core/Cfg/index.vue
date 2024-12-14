@@ -229,7 +229,7 @@ const props = defineProps<{
   getPredecessors:(cell: Cell | string) => Cell[]
  }>()
 
-const categories = computed(() => window.__cpw_categories.value)
+const categories = computed(() => window.__CPW_DATA.categories.value)
 
 const tabs = { params: '参数', incomes: '输入', outgos: '输出' }
 type ConfigType = keyof typeof tabs

@@ -28,6 +28,55 @@
       :delay="200"
       size="small"
     >
+      <div
+        class="cpw-dnd-category"
+        :title="bookmark_cate.id"
+        @click="toogleExpand(bookmark_cate.id)"
+      >
+        <ChevronRightIcon
+          class="cpw-dnd-category-icon"
+          :expanded="dbKeyword ? true : dndExpanded[bookmark_cate.id]"
+        />
+        <div class="cpw-dnd-category-label">{{ bookmark_cate.name }}</div>
+      </div>
+      <template v-if="dbKeyword ? true : dndExpanded[bookmark_cate.id]">
+        <t-tooltip
+          v-for="comp in bookmark_cate.children"
+          :key="comp.key"
+          placement="right-top"
+          :overlay-inner-style="{ width: '300px', padding: '8px 12px' }"
+        >
+          <template #content>
+            <div v-if="comp.desc">{{ comp.desc }}</div>
+            <div
+              v-else
+              style="color: var(--td-text-color-secondary);"
+            >
+              组件无描述
+            </div>
+            <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
+              <t-button
+                content="取消收藏"
+                variant="text"
+                size="small"
+                style="--td-text-color-primary: #f1f134"
+                @click="setBookmark(false, comp.key)"
+              >
+                <template #icon><StarFilledIcon /></template>
+              </t-button>
+            </div>
+          </template>
+          <div
+            class="cpw-dnd-component"
+            :title="comp.name"
+            @mousedown="e => startDrag(e, comp)"
+          >
+            {{ comp.name }}
+          </div>
+        </t-tooltip>
+      </template>
+      <!--  -->
+
       <template
         v-for="cate, cateIdx in list"
         :key="cate.id"
@@ -58,16 +107,35 @@
               >
                 组件无描述
               </div>
-              <!-- v-if="comp.genre === 'custom'" -->
-              <div
-                style="display: flex; padding-top: 12px;"
-              >
+              <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
+                <t-button
+                  v-if="bookmark_ids.includes(comp.key)"
+                  content="取消收藏"
+                  variant="text"
+                  size="small"
+                  style="--td-text-color-primary: #f1f134"
+                  @click="setBookmark(false, comp.key)"
+                >
+                  <template #icon><StarFilledIcon /></template>
+                </t-button>
+
+                <t-button
+                  v-else
+                  content="收藏"
+                  variant="text"
+                  size="small"
+                  style="--td-text-color-primary: #f1f134"
+                  @click="setBookmark(true, comp.key)"
+                >
+                  <template #icon><StarIcon /></template>
+                </t-button>
+
+                <!-- v-if="comp.genre === 'custom'" -->
                 <t-button
                   content="删除"
                   variant="text"
                   theme="danger"
                   size="small"
-                  style="margin-left: auto"
                   @click="del(comp.key, compIdx, cateIdx)"
                 />
               </div>
@@ -90,7 +158,7 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import type { Dnd } from '@antv/x6-plugin-dnd'
 import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
@@ -98,20 +166,19 @@ import { initDnd } from '../Graph'
 import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../cellHandlers'
 import { Input as TInput, Button as TButton, Loading as TLoading, Tooltip as TTooltip } from 'tdesign-vue-next'
 import { watchDebounced } from '@vueuse/core'
-import { PlusIcon, ChevronRightIcon } from 'tdesign-icons-vue-next'
+import { PlusIcon, ChevronRightIcon, StarIcon, StarFilledIcon } from 'tdesign-icons-vue-next'
 import CellEditor from '../CellEditor/index.vue'
 import { Dialog, showDialog } from '@jupyterlab/apputils'
-import { reqDelComponent } from '../api'
-
-const categories = computed(() => window.__cpw_categories.value)
-const categories_loading = computed(() => window.__cpw_categories_loading.value)
+import { reqBookmarkComponent, reqDelComponent, reqUnBookmarkComponent } from '../api'
 
 const emit = defineEmits(['refreshCategory'])
 
 let dnd: Dnd
 
 const dndDom = useTemplateRef('_dndDom')
+
 const dndExpanded = ref<Record<string, boolean>>({})
+
 const toogleExpand = (id: string) => {
   if (dndExpanded.value[id]) delete dndExpanded.value[id]
   else dndExpanded.value[id] = true
@@ -125,6 +192,29 @@ watchDebounced(
   () => { dbKeyword.value = keyword.value.trim().toLowerCase() },
   { debounce: 500 },
 )
+
+const categories = computed(() => window.__CPW_DATA.categories.value)
+const categories_loading = computed(() => window.__CPW_DATA.categories_loading.value)
+const bookmark_ids = computed(() => window.__CPW_DATA.bookmark_component_ids.value)
+
+const BOOKMARK_CATE_ID = '__bookmark__'
+const bookmark_cate = computed(() => {
+  const res: CPW.CellCategory = {
+    id: BOOKMARK_CATE_ID,
+    name: '我收藏的组件',
+    children: [],
+  }
+  categories.value.forEach(cate => {
+    cate.children.forEach(comp => {
+      if (
+        bookmark_ids.value.includes(comp.key) &&
+        (dbKeyword.value ? comp.name.toLowerCase().includes(dbKeyword.value) : true)
+      ) res.children.push(comp)
+    })
+  })
+
+  return res
+})
 
 const list = computed<CPW.CellCategory[]>(() => {
   if (!categories.value.length) return []
@@ -198,7 +288,17 @@ const del = async (compKey: number, compIdx: number, cateIdx: number) => {
   if (button.label !== '删除') return
   // 乐观更新，不await了
   reqDelComponent(compKey)
-  window.__cpw_categories.value[cateIdx]?.children.splice(compIdx, 1)
+  window.__CPW_DATA.categories.value[cateIdx]?.children.splice(compIdx, 1)
 }
 
+const setBookmark = (bool: boolean, compKey: number) => {
+  // 乐光更新
+  if (bool) {
+    reqBookmarkComponent(compKey)
+    window.__CPW_DATA.bookmark_component_ids.value.unshift(compKey)
+  } else {
+    reqUnBookmarkComponent(compKey)
+    window.__CPW_DATA.bookmark_component_ids.value = window.__CPW_DATA.bookmark_component_ids.value.filter(id => id !== compKey)
+  }
+}
 </script>

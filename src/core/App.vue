@@ -406,17 +406,17 @@ window.addEventListener(`cpw-event-${props.id}`, listener as any)
 // * --------- dnd数据 --------------
 const getCellCategories = async () => {
   // 多个cpw同时挂载时确保只请求一次
-  if (window.__cpw_categories_loading.value) return
-  window.__cpw_categories_loading.value = true
+  if (window.__CPW_DATA.categories_loading.value) return
+  window.__CPW_DATA.categories_loading.value = true
   try {
     const data = await reqCategories()
-    window.__cpw_categories.value = data
+    window.__CPW_DATA.categories.value = data
   } catch (err: any) {
     MessagePlugin.error(err.message)
   }
-  window.__cpw_categories_loading.value = false
+  window.__CPW_DATA.categories_loading.value = false
 }
-if (!window.__cpw_categories.value.length) getCellCategories()
+if (!window.__CPW_DATA.categories.value.length) getCellCategories()
 
 // * --------- cfg数据 --------------
 const getPredecessors = (target: Cell | string) => {

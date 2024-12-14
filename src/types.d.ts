@@ -1,9 +1,16 @@
 /// <reference types="vite/client" />
 
 interface Window {
+
   /** 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应 */
-  __cpw_categories: import('vue').Ref<CPW.CellCategory[]>
-  __cpw_categories_loading: import('vue').Ref<boolean>
+  __CPW_DATA: {
+    project_id: number
+
+    categories: import('vue').Ref<CPW.CellCategory[]>
+    categories_loading: import('vue').Ref<boolean>
+
+    bookmark_component_ids: import('vue').Ref<number[]>
+  }
 }
 
 declare namespace CPW {
@@ -88,7 +95,7 @@ declare namespace CPW {
     /** 组件名称 */
     name: string
 
-    /** 组件类型，也就是左侧组件dnd里源组件key */
+    /** 组件唯一key，也就是左侧组件dnd里源组件key */
     key: number
 
     /** 组件描述说明 */
