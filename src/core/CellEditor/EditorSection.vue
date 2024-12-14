@@ -1,12 +1,12 @@
 <template>
   <div class="cpw-cell-editor-section">
     <div class="cpw-cell-editor-section-label">
-      <span>{{ label }}</span>
+      <span style="vertical-align: middle">{{ label }}</span>
       <t-tooltip
         v-if="desc"
         :content="desc"
       >
-        <HelpCircleIcon style="line-height: 0; font-size: 14px; color: var(--td-brand-color); vertical-align: text-top; margin-left: 4px;" />
+        <HelpCircleIcon style="vertical-align: middle; margin-left: 4px; font-size: 14px; color: var(--td-brand-color);" />
       </t-tooltip>
     </div>
     <div class="cpw-cell-editor-section-content">

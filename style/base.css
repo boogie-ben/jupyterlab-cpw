@@ -428,8 +428,9 @@
 
 .cpw-cell-editor-section-label {
   /* line-height: ; */
-  width: 150px;
+  width: 120px;
   flex-shrink: 0;
+  padding-right: 16px;
 }
 
 .cpw-cell-editor-section-content {

@@ -2,7 +2,7 @@
 
 interface Window {
   /** 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应 */
-  __cpw_categories: import('vue').ShallowRef<CPW.CellCategory[]>
+  __cpw_categories: import('vue').Ref<CPW.CellCategory[]>
   __cpw_categories_loading: import('vue').Ref<boolean>
 }
 
@@ -140,12 +140,20 @@ declare namespace CPW {
   }
 
   interface CellComponent extends CellCommon {
+    /** 对应category的id */
     category: string
-    bookmark: boolean
-      /** 组件参数配置 */
+    // bookmark: boolean
+    /** 组件参数配置 */
     paramsConfig: CPW.CellParamConfig[]
+    /** 组件输入配置 */
     incomesConfig: CPW.CellIncomeConfig[]
+    /** 组件输出配置 */
     outgosConfig: CPW.CellOutgoConfig[]
+    /**
+     * - common 内置组件
+     * - custom 用户创建的组件
+     */
+    genre: 'common' | 'custom'
   }
 
   interface CellCategory {

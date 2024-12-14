@@ -15,7 +15,7 @@
     @opened="initEditor"
   >
     <div
-      style="height: 100%; overflow: auto; padding-right: 24px; min-width: 950px"
+      style="height: 100%; overflow: auto; padding-right: 24px; min-width: 800px"
       class="cpw-cell-editor"
     >
       <EditorSection label="组件名称">
@@ -60,11 +60,11 @@
         >
           <template #actions="{ rowIndex }">
             <Edit1Icon
-              style="line-height: 0; font-size: 16px; color: var(--td-brand-color); cursor: pointer; margin-right: 8px"
+              style="font-size: 16px; color: var(--td-brand-color); cursor: pointer; margin-right: 8px"
               @click="editParam(editCell.paramsConfig[rowIndex])"
             />
             <CloseIcon
-              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
+              style="font-size: 16px; color: var(--td-error-color); cursor: pointer;"
               @click="editCell.paramsConfig.splice(rowIndex, 1)"
             />
           </template>
@@ -110,7 +110,7 @@
 
           <template #actions="{ rowIndex }">
             <CloseIcon
-              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
+              style="font-size: 16px; color: var(--td-error-color); cursor: pointer;"
               @click="editCell.incomesConfig.splice(rowIndex, 1)"
             />
           </template>
@@ -154,7 +154,7 @@
 
           <template #actions="{ rowIndex }">
             <CloseIcon
-              style="line-height: 0; font-size: 16px; color: var(--td-error-color); cursor: pointer;"
+              style="font-size: 16px; color: var(--td-error-color); cursor: pointer;"
               @click="editCell.outgosConfig.splice(rowIndex, 1)"
             />
           </template>
@@ -251,7 +251,7 @@
                 size="small"
               />
               <CloseIcon
-                style="font-size: 16px; cursor: pointer; margin-left: 4px; line-height: 0"
+                style="font-size: 16px; color: var(--td-error-color); cursor: pointer; margin-left: 4px;"
                 @click="tempParam.options!.splice(i, 1)"
               />
             </t-input-group>
@@ -346,7 +346,6 @@ interface EditorCell extends Pick<CPW.CellComponent, 'category' | 'name' | 'desc
 interface Emits {
   (e: 'done', cell: EditorCell): void
 }
-
 const emit = defineEmits<Emits>()
 
 type Mode = 'new' | 'edit'
@@ -355,7 +354,7 @@ const visible = ref(false)
 
 const mode = ref<Mode>('new')
 
-const modeLabel = {
+const modeLabel: Record<Mode, string> = {
   new: '新建组件',
   edit: '编辑组件',
 }
@@ -410,14 +409,15 @@ const cateOptions = computed(() => categories.value.map(c => ({ label: c.name, v
 
 // * ---------------- 参数 --------------
 const paramsColumns: TableProps<EditorCell['paramsConfig'][number]>['columns'] = [
-  { title: '变量名', colKey: 'name', width: 250, ellipsis: true },
+  { title: '变量名', colKey: 'name', minWidth: 120, ellipsis: true },
   { title: '类型', cell: 'type', width: 100 },
   {
     title: '默认值',
     cell: (h, { row }) => row.type === 'bool' ? (row.default ? 'True' : 'False') : (row.default === null ? '' : `${row.default}`),
     ellipsis: true,
+    minWidth: 120,
   },
-  { title: '参数描述', colKey: 'desc', ellipsis: true },
+  { title: '参数描述', colKey: 'desc', minWidth: 100, ellipsis: true },
   { title: '是否必填', cell: (h, { row }) => row.required ? '是' : '', width: 100, align: 'center' },
   { title: '操作', cell: 'actions', width: 100, align: 'center' },
 ]
@@ -504,8 +504,8 @@ const editParamDone = () => {
 
 // * ----------- 输入 --------------
 const incomesColumns: TableProps['columns'] = [
-  { title: '变量名', cell: 'name', width: 250 },
-  { title: '说明', colKey: 'desc' },
+  { title: '变量名', cell: 'name', minWidth: 150 },
+  { title: '说明', colKey: 'desc', minWidth: 150 },
   { title: '是否必填', cell: 'required', width: 100, align: 'center' },
   { title: '操作', cell: 'actions', width: 100, align: 'center' },
 ]
@@ -516,8 +516,8 @@ const newIncome = () => {
 
 // * ----------- 输出 --------------
 const outgosColumns: TableProps['columns'] = [
-  { title: '变量名', cell: 'name', width: 250 },
-  { title: '说明', colKey: 'desc' },
+  { title: '变量名', cell: 'name', minWidth: 150 },
+  { title: '说明', colKey: 'desc', minWidth: 150 },
   { title: '操作', cell: 'actions', width: 100, align: 'center' },
 ]
 

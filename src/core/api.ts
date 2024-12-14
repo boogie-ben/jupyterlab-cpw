@@ -33,6 +33,7 @@ const request = async <T = any>(
   return data.data
 }
 
+/** 获取组件目录 */
 export const reqCategories = (): Promise<CPW.CellCategory[]> =>
   request('/api/component/project_categories/')
     .then(data =>
@@ -42,9 +43,9 @@ export const reqCategories = (): Promise<CPW.CellCategory[]> =>
           return {
             key: id,
             name,
-            desc: description || '',
+            desc: description?.trim() || '',
             category,
-            bookmark: false,
+            // bookmark: false,
             paramsConfig: paramsConfig || [],
             incomesConfig: inputConfig || [],
             outgosConfig: outputConfig || [],
@@ -60,6 +61,7 @@ export const reqCategories = (): Promise<CPW.CellCategory[]> =>
       }),
     )
 
+/** 创建组件配置 */
 export const reqCreateComponent = (project_id: number, cell: any) => {
   const { name, desc, category, source, paramsConfig, incomesConfig, outgosConfig } = cell
   const payload = {
@@ -73,4 +75,9 @@ export const reqCreateComponent = (project_id: number, cell: any) => {
     project_id,
   }
   return request('/api/component/', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+/** 删除组件配置 */
+export const reqDelComponent = (id: number) => {
+  return request(`/api/component/${id}/`, { method: 'DELETE' })
 }

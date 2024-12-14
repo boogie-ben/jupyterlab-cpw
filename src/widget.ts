@@ -5,7 +5,7 @@ import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
 import { renderCPW } from './core/index'
 import { showErrorMessage } from '@jupyterlab/apputils'
-import { ref, shallowRef } from 'vue'
+import { ref } from 'vue'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
@@ -36,11 +36,15 @@ class CPWWidget extends Widget {
         this._context.model.fromString(JSON.stringify(defaultFileContent)) // 画布对象
         this.save()
       }
-      // console.log(this)
       window.addEventListener(`cpw-action-${this.id}`, this)
+      // console.log(this)
+      /**
+       * 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应
+       * 在widget初始化，多个cpw同时挂载确保只初始化一次，在vue部分直接访问使用
+       */
       if (!Object.hasOwnProperty.call(window, '__cpw_categories_loading')) {
         window.__cpw_categories_loading = ref(false)
-        window.__cpw_categories = shallowRef([])
+        window.__cpw_categories = ref([])
       }
       renderCPW(this.node, this.id, this._context.model.toString())
     })

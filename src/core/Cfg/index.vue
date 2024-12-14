@@ -145,7 +145,8 @@
           height: 32px;
           padding: 0 12px;
           column-gap: 4px;
-          margin: 8px 0;
+          margin-top: 4px;
+          margin-bottom: 8px;
           background-color: var(--td-bg-color-secondarycontainer);
           color: var(--td-text-color-primary);
         "
@@ -161,10 +162,10 @@
           :content="out.desc"
           placement="top"
         >
-          <HelpCircleIcon style="font-size: 14px; line-height: 0; flex-shrink: 0; color: var(--td-brand-color);" />
+          <HelpCircleIcon style="font-size: 14px; flex-shrink: 0; color: var(--td-brand-color);" />
         </t-tooltip>
         <CloseIcon
-          style="font-size: 14px; line-height: 0; flex-shrink: 0; cursor: pointer;"
+          style="font-size: 14px; flex-shrink: 0; cursor: pointer;"
           @click="delOutput(i)"
         />
       </div>
@@ -266,7 +267,7 @@ const FormLabel = ({ config, hideoptional }: { config: CPW.CellParam | CPW.CellI
     { !hideoptional && !config.required && <div style="flex-shrink: 0; color: var(--td-text-color-secondary);">(可选)</div> }
     {
       config.desc && <TTooltip content={config.desc} placement="top">
-        <HelpCircleIcon style="flex-shrink: 0; color: var(--td-brand-color); font-size: 14px; line-height: 0;" />
+        <HelpCircleIcon style="flex-shrink: 0; color: var(--td-brand-color); font-size: 14px;" />
       </TTooltip>
     }
   </div>
@@ -341,7 +342,7 @@ const syncInfo = ref({
   source: props.activeCell.source,
 })
 
-const updateAll = (c: Omit<CPW.CellComponent, 'bookmark' | 'key'>) => {
+const updateAll = (c: Omit<CPW.CellComponent, 'key' | 'genre'>) => {
   const { paramsConfig, incomesConfig, outgosConfig, name, desc, source } = c
   syncParams.value = formatCellParams(paramsConfig)
   syncIncomes.value = formatCellIncomes(incomesConfig)
