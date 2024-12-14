@@ -225,7 +225,6 @@
           v-if="tempParam.type === 'opt'"
           label="选项"
         >
-          <!-- todo 选项配置 -->
           <div style="width: 100%">
             <div style="display: flex; align-items: center; margin-bottom: 4px; padding-right: 20px;">
               <div style="flex: 1; text-align: center">Label</div>

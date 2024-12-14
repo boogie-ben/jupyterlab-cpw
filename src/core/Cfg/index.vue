@@ -369,7 +369,6 @@ const reset = async () => {
   else showErrorMessage('重置组件失败', '组件列表中无此组件，或已被删除')
 }
 
-// todo 对话框更新config时，重新执行
 const CellEditorRef = useTemplateRef('_CellEditor')
 const edit = () => {
   CellEditorRef.value?.openEdit(props.activeCell)

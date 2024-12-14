@@ -51,7 +51,7 @@ export const reqCategories = (): Promise<CPW.CellCategory[]> =>
             outgosConfig: outputConfig || [],
             source,
           } as CPW.CellComponent
-        }) // todo转换部分字段名
+        })
 
         return {
           id: cate.key,
