@@ -4,8 +4,9 @@ import { type DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyte
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
 import { renderCPW } from './core/index'
-import { showErrorMessage } from '@jupyterlab/apputils'
+import { showErrorMessage, SessionContextDialogs } from '@jupyterlab/apputils'
 import { ref } from 'vue'
+// import {} from '@jupyterlab/apputils'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
@@ -20,6 +21,7 @@ const defaultFileContent: CPW.FileSchema = {
 class CPWWidget extends Widget {
   private _commands: CommandRegistry
   private _context: DocumentRegistry.Context
+  private _dialogs = new SessionContextDialogs()
 
   get session () {
     return this._context.sessionContext.session
@@ -37,7 +39,6 @@ class CPWWidget extends Widget {
         this.save()
       }
       window.addEventListener(`cpw-action-${this.id}`, this)
-      // console.log(this)
       /**
        * 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应
        * 在widget初始化，多个cpw同时挂载确保只初始化一次，在vue部分直接访问使用
@@ -120,6 +121,10 @@ class CPWWidget extends Widget {
   kernelResert () {
     // todo 打断正在执行的run循环
     this.session?.kernel?.restart()
+  }
+
+  kernelChange () {
+    this._dialogs.selectKernel(this._context.sessionContext)
   }
 
   kernelInterrupt () {

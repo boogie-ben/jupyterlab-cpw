@@ -22,10 +22,11 @@
 
     <t-button
       style="margin-left: auto;"
-      title="内核状态"
+      title="切换内核"
       size="small"
       variant="text"
       :content="kernelStatusLabel[kernelStatus]"
+      @click="dispatchAction(id, { type: 'kernelChange', data: null })"
     >
       <template #icon>
         <span
@@ -58,10 +59,12 @@
 </template>
 
 <script lang="ts" setup>
-import { type ToolbarBtn, kernelStatusLabel, btnIcons } from '../utils'
+import { type ToolbarBtn, kernelStatusLabel, btnIcons, dispatchAction } from '../utils'
 import type { Kernel } from '@jupyterlab/services'
 import { Button as TButton } from 'tdesign-vue-next'
+
 defineProps<{
+  id: string
   left: ToolbarBtn[]
   right: ToolbarBtn[]
   kernelStatus: Kernel.Status

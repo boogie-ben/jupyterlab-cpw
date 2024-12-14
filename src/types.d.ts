@@ -170,8 +170,17 @@ declare namespace CPW {
    */
   type RunType = 'all' | 'to-current' | 'single'
 
-  // *------- 从vue应用内调用的action ------------
-  type ActionType = 'run' | 'kernelResert' | 'kernelInterrupt' | 'exportIpynb' | 'change' | 'kernelStatus' | 'save' | 'renderOutputs'
+  // *-------------------- 从vue应用内调用的action -----------------------
+
+  type ActionType = 'run' |
+   'kernelResert' |
+   'kernelInterrupt' |
+   'exportIpynb' |
+   'change' |
+   'kernelStatus' |
+   'save' |
+   'renderOutputs' |
+   'kernelChange'
 
   interface ActionPayloadData {
     run: { cells: RunnerCell[] }
@@ -181,7 +190,8 @@ declare namespace CPW {
     change: { content: string }
     kernelStatus: null
     save: null
-    renderOutputs: { id: string, outputs: Cell['outputs'] }
+    renderOutputs: { id: string, outputs: Cell['outputs'] },
+    kernelChange: null
   }
 
   // type ActionPayload<T extends ActionType> = { type: T } & (ActionPayloadData[T] extends null ? { data?: any } : { data: ActionPayloadData[T] })
@@ -208,9 +218,12 @@ declare namespace CPW {
     (id: string, payload: ActionPayload<'save'>): any
     /** 传入一个outputs数组，widget会派发cellOutputs事件。用于打开cpw文件后回显某个节点的输出渲染 */
     (id: string, payload: ActionPayload<'renderOutputs'>): any
+    /** 打开内核切换dialog */
+    (id: string, payload: ActionPayload<'kernelChange'>): any
   }
 
-  // *------- 从jupyter插件widget往vue应用派发的事件 ------------
+  // *------------------- 从jupyter插件widget往vue应用派发的事件 ----------------
+
   type EventType = 'cellOutputs' | 'cellStatus' | 'kernelStatus' | 'dispose'
 
   interface EventPayloadData {

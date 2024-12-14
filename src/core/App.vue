@@ -2,6 +2,7 @@
   <div class="cpw-container">
     <!-- eslint-disable vue/no-v-html -->
     <Toolbar
+      :id="id"
       :left="toolbarLeft"
       :right="toolbarRight"
       :kernel-status="kernelStatus"
