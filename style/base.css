@@ -477,3 +477,16 @@
 .cpw-cell-editor-section-content .jp-CodeMirrorEditor .cm-editor .cm-scroller {
   overflow: auto;
 }
+
+/* ---------------- 数据集 --------------------- */
+.ds-container {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.ds-container * {
+  box-sizing: border-box;
+}

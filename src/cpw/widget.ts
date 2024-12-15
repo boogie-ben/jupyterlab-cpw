@@ -3,12 +3,8 @@ import { Widget } from '@lumino/widgets'
 import { type DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry'
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
-import { renderCPW } from './core/index'
+import { renderCPW } from './core'
 import { showErrorMessage, SessionContextDialogs } from '@jupyterlab/apputils'
-import { ref } from 'vue'
-import { reqBookmarkedComponents } from './core/api'
-import { MessagePlugin } from 'tdesign-vue-next'
-// import {} from '@jupyterlab/apputils'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
 
@@ -20,25 +16,6 @@ const defaultFileContent: CPW.FileSchema = {
   cells: [],
 }
 
-/**
- * 所有CPW组件复用一份数据，把响应式数据直接保存到window，所有cpw页面都响应
- * 多个cpw同时挂载确保只初始化一次，在vue部分直接访问使用
- */
-if (!Object.hasOwnProperty.call(window, '__CPW_DATA')) {
-  window.__CPW_DATA = {
-    project_id: 123123,
-    categories: ref([]),
-    categories_loading: ref(false),
-
-    bookmark_component_ids: ref([]),
-  }
-}
-const getBookmark = () => {
-  reqBookmarkedComponents()
-    .then(data => { window.__CPW_DATA.bookmark_component_ids.value = data })
-    .catch((err: any) => { MessagePlugin.error('获取收藏组件失败: ' + err.message) })
-}
-getBookmark()
 class CPWWidget extends Widget {
   private _commands: CommandRegistry
   private _context: DocumentRegistry.Context
@@ -60,6 +37,7 @@ class CPWWidget extends Widget {
         this.save()
       }
       window.addEventListener(`cpw-action-${this.id}`, this)
+      console.log(this)
       renderCPW(this.node, this.id, this._context.model.toString())
     })
   }
