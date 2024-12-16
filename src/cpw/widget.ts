@@ -3,7 +3,7 @@ import { Widget } from '@lumino/widgets'
 import { type DocumentRegistry, ABCWidgetFactory, DocumentWidget } from '@jupyterlab/docregistry'
 import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea'
 import { standardRendererFactories, RenderMimeRegistry } from '@jupyterlab/rendermime'
-import { renderCPW } from './core'
+// import { renderCPW } from './core'
 import { showErrorMessage, SessionContextDialogs } from '@jupyterlab/apputils'
 
 const rendermime = new RenderMimeRegistry({ initialFactories: standardRendererFactories })
@@ -37,8 +37,8 @@ class CPWWidget extends Widget {
         this.save()
       }
       window.addEventListener(`cpw-action-${this.id}`, this)
-      console.log(this)
-      renderCPW(this.node, this.id, this._context.model.toString())
+      // console.log(this)
+      // renderCPW(this.node, this.id, this._context.model.toString())
     })
   }
 

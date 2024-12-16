@@ -11,4 +11,8 @@ interface Window {
 
     bookmark_component_ids: import('vue').Ref<number[]>
   }
+
+  __DS_DATA: {
+    queue: import('vue').Ref<DownloadTask[]>
+  }
 }

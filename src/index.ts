@@ -1,5 +1,5 @@
 import {
-  type JupyterFrontEnd,
+  JupyterFrontEnd,
   type JupyterFrontEndPlugin,
   ILayoutRestorer,
   ILabShell,
@@ -112,13 +112,19 @@ const datasourcePlugin: JupyterFrontEndPlugin<void> = {
   id: 'cpw-datasource:plugin',
   description: 'Datasource Categories',
   autoStart: true,
-  requires: [ILabShell, IDefaultFileBrowser],
+  requires: [ILabShell, IDefaultFileBrowser, JupyterFrontEnd.IPaths],
   activate (
     app: JupyterFrontEnd,
     shell: ILabShell,
     filebrowser: IDefaultFileBrowser,
+    paths: JupyterFrontEnd.IPaths,
   ) {
-    shell.add(new DatasourcePanel({ filebrowser }), 'left', { type: '数据集' })
+    // console.log(app.)
+    shell.add(
+      new DatasourcePanel({ filebrowser, serverRoot: paths.directories.serverRoot }),
+      'left',
+      { type: '数据集' },
+    )
   },
 }
 

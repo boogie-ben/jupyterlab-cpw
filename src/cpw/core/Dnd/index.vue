@@ -67,7 +67,7 @@ const dndDom = useTemplateRef('_dndDom')
 
 const dndExpanded = ref<Record<string, boolean>>({})
 
-const toogleExpand = (id: string) => {
+const toggleExpand = (id: string) => {
   if (dndExpanded.value[id]) delete dndExpanded.value[id]
   else dndExpanded.value[id] = true
 }
@@ -196,7 +196,7 @@ const Cate = ({ cate, idx, bookmark }: { cate: CPW.CellCategory, idx?: number, b
     <div
       class="cpw-dnd-category"
       title={cate.name}
-      onClick={() => toogleExpand(cate.id)}
+      onClick={() => toggleExpand(cate.id)}
     >
       {/* @ts-ignore */}
       <ChevronRightIcon class="cpw-dnd-category-icon" expanded={isExpanded} />

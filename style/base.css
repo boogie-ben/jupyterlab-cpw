@@ -490,3 +490,75 @@
 .ds-container * {
   box-sizing: border-box;
 }
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  height: 44px;
+  padding: 0 8px;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.ds-list {
+  flex: 1;
+  height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-top: 1px solid var(--jp-toolbar-border-color);
+}
+
+.ds-cate,
+.ds-file {
+  height: 33px;
+  line-height: 32px;
+  /* margin-bottom: 1px; */
+  border-bottom: 1px solid var(--dnd-item-border-color);
+  cursor: pointer;
+}
+
+.ds-cate {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  padding: 0 8px 0 4px;
+  background-color: var(--dnd-category-bg-color);
+}
+
+.ds-cate .ds-cate-icon {
+  height: 16px;
+  width: 16px;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.ds-cate .ds-cate-icon[expanded=true] {
+  transform: rotateZ(90deg);
+}
+
+.ds-cate .ds-cate-label { 
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ds-file {
+  display: flex;
+  align-items: center;
+  column-gap: 4px;
+  padding: 0 8px 0 24px;
+  background-color: var(--dnd-component-bg-color);
+}
+
+.ds-file-label {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ds-file:hover {
+  background-color: var(--dnd-highlight-bg-color);
+}

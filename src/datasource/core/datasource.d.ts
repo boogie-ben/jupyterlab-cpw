@@ -4,7 +4,12 @@ interface Team {
 }
 
 interface DataFile {
-  name: string
+  /** 父级目录路径 */
+  path: string
+  /** COS文件路径 */
+  key: string
+  /** 文件名 */
+  filename: string
   size: number
   type: string
 }
@@ -26,4 +31,13 @@ interface Datasource {
   favorite: boolean
 
   files: DataFile[]
+}
+
+interface DownloadTask {
+  /** cos的文件Key */
+  key: string
+  /** 下载到jupyter工作目录的目标路径 */
+  path: string
+  /** 是否下载中 */
+  downloading?: boolean
 }
