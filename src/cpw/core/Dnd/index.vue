@@ -28,128 +28,16 @@
       :delay="200"
       size="small"
     >
-      <div
-        class="cpw-dnd-category"
-        :title="bookmark_cate.id"
-        @click="toogleExpand(bookmark_cate.id)"
-      >
-        <ChevronRightIcon
-          class="cpw-dnd-category-icon"
-          :expanded="dbKeyword ? true : dndExpanded[bookmark_cate.id]"
-        />
-        <div class="cpw-dnd-category-label">{{ bookmark_cate.name }}</div>
-      </div>
-      <template v-if="dbKeyword ? true : dndExpanded[bookmark_cate.id]">
-        <t-tooltip
-          v-for="comp in bookmark_cate.children"
-          :key="comp.key"
-          placement="right-top"
-          :overlay-inner-style="{ width: '300px', padding: '8px 12px' }"
-        >
-          <template #content>
-            <div v-if="comp.desc">{{ comp.desc }}</div>
-            <div
-              v-else
-              style="color: var(--td-text-color-secondary);"
-            >
-              组件无描述
-            </div>
-            <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
-              <t-button
-                content="取消收藏"
-                variant="text"
-                size="small"
-                style="--td-text-color-primary: #f1f134"
-                @click="setBookmark(false, comp.key)"
-              >
-                <template #icon><StarFilledIcon /></template>
-              </t-button>
-            </div>
-          </template>
-          <div
-            class="cpw-dnd-component"
-            :title="comp.name"
-            @mousedown="e => startDrag(e, comp)"
-          >
-            {{ comp.name }}
-          </div>
-        </t-tooltip>
-      </template>
-      <!--  -->
-
-      <template
+      <Cate
+        :cate="bookmark_cate"
+        bookmark
+      />
+      <Cate
         v-for="cate, cateIdx in list"
         :key="cate.id"
-      >
-        <div
-          class="cpw-dnd-category"
-          :title="cate.name"
-          @click="toogleExpand(cate.id)"
-        >
-          <ChevronRightIcon
-            class="cpw-dnd-category-icon"
-            :expanded="dbKeyword ? true : dndExpanded[cate.id]"
-          />
-          <div class="cpw-dnd-category-label">{{ cate.name }}</div>
-        </div>
-        <template v-if="dbKeyword ? true : dndExpanded[cate.id]">
-          <t-tooltip
-            v-for="comp, compIdx in cate.children"
-            :key="comp.key"
-            placement="right-top"
-            :overlay-inner-style="{ width: '300px', padding: '8px 12px' }"
-          >
-            <template #content>
-              <div v-if="comp.desc">{{ comp.desc }}</div>
-              <div
-                v-else
-                style="color: var(--td-text-color-secondary);"
-              >
-                组件无描述
-              </div>
-              <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
-                <t-button
-                  v-if="bookmark_ids.includes(comp.key)"
-                  content="取消收藏"
-                  variant="text"
-                  size="small"
-                  style="--td-text-color-primary: #f1f134"
-                  @click="setBookmark(false, comp.key)"
-                >
-                  <template #icon><StarFilledIcon /></template>
-                </t-button>
-
-                <t-button
-                  v-else
-                  content="收藏"
-                  variant="text"
-                  size="small"
-                  style="--td-text-color-primary: #f1f134"
-                  @click="setBookmark(true, comp.key)"
-                >
-                  <template #icon><StarIcon /></template>
-                </t-button>
-
-                <!-- v-if="comp.genre === 'custom'" -->
-                <t-button
-                  content="删除"
-                  variant="text"
-                  theme="danger"
-                  size="small"
-                  @click="del(comp.key, compIdx, cateIdx)"
-                />
-              </div>
-            </template>
-            <div
-              class="cpw-dnd-component"
-              :title="comp.name"
-              @mousedown="e => startDrag(e, comp)"
-            >
-              {{ comp.name }}
-            </div>
-          </t-tooltip>
-        </template>
-      </template>
+        :cate="cate"
+        :idx="cateIdx"
+      />
     </t-loading>
     <CellEditor
       ref="_CellEditor"
@@ -164,7 +52,7 @@ import type { Graph } from '@antv/x6'
 import { ref, defineExpose, onBeforeUnmount, computed, useTemplateRef } from 'vue'
 import { initDnd } from '../Graph'
 import { formatCellParams, formatCellIncomes, formatCellOutgos } from '../cellHandlers'
-import { Input as TInput, Button as TButton, Loading as TLoading, Tooltip as TTooltip } from 'tdesign-vue-next'
+import { Input as TInput, Button as TButton, Loading as TLoading, Popup as TPopup } from 'tdesign-vue-next'
 import { watchDebounced } from '@vueuse/core'
 import { PlusIcon, ChevronRightIcon, StarIcon, StarFilledIcon } from 'tdesign-icons-vue-next'
 import CellEditor from '../CellEditor/index.vue'
@@ -300,5 +188,62 @@ const setBookmark = (bool: boolean, compKey: number) => {
     reqUnBookmarkComponent(compKey)
     window.__CPW_DATA.bookmark_component_ids.value = window.__CPW_DATA.bookmark_component_ids.value.filter(id => id !== compKey)
   }
+}
+
+const Cate = ({ cate, idx, bookmark }: { cate: CPW.CellCategory, idx?: number, bookmark?: boolean }) => {
+  const isExpanded = dbKeyword.value ? true : dndExpanded.value[cate.id]
+  return <>
+    <div
+      class="cpw-dnd-category"
+      title={cate.name}
+      onClick={() => toogleExpand(cate.id)}
+    >
+      {/* @ts-ignore */}
+      <ChevronRightIcon class="cpw-dnd-category-icon" expanded={isExpanded} />
+      <div class="cpw-dnd-category-label">{cate.name}</div>
+    </div>
+    {
+      isExpanded && cate.children.map((comp, compIdx) => <TPopup
+        key={comp.key}
+        placement="right-top"
+        overlayInnerStyle={{ width: '300px', padding: '8px 12px' }}
+        showArrow
+      >
+        {{
+          content: () => <>
+            {comp.desc ? <div>{comp.desc}</div> : <div style="color: var(--td-text-color-secondary)">组件无描述</div>}
+            <div style="display: flex; justify-content: flex-end; padding-top: 12px;">
+              {
+                bookmark_ids.value.includes(comp.key)
+                  ? <TButton
+                    content="取消收藏"
+                    variant="text"
+                    size="small"
+                    style="--td-text-color-primary: #f1f134"
+                    onClick={() => setBookmark(false, comp.key)}
+                  >
+                    {{ icon: () => <StarFilledIcon /> }}
+                  </TButton>
+                  : (
+                    !bookmark && <TButton
+                      content="收藏"
+                      variant="text"
+                      size="small"
+                      style="--td-text-color-primary: #f1f134"
+                      onClick={() => setBookmark(true, comp.key)}
+                    >
+                      {{ icon: () => <StarIcon /> }}
+                    </TButton>
+                  )
+              }
+              {!bookmark && <TButton content="删除" variant="text" theme="danger" size="small" onClick={() => del(comp.key, compIdx, idx!)} />}
+            </div>
+          </>,
+
+          default: () => <div class="cpw-dnd-component" title={comp.name} onMousedown={e => startDrag(e, comp)} >{comp.name}</div>,
+        }}
+      </TPopup>)
+    }
+  </>
 }
 </script>
