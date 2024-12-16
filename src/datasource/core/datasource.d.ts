@@ -4,13 +4,14 @@ interface Team {
 }
 
 interface DataFile {
-  /** 父级目录路径 */
-  path: string
-  /** COS文件路径 */
+  /** COS文件完整路径 */
   key: string
+  /** dirname目录路径，相当于key没有filename部分 */
+  path: string
   /** 文件名 */
   filename: string
   size: number
+  size_str: string
   type: string
 }
 
@@ -29,15 +30,18 @@ interface Datasource {
   read_me: string
   team: Team,
   favorite: boolean
-
   files: DataFile[]
 }
 
 interface DownloadTask {
-  /** cos的文件Key */
+  /** cos的文件完整Key */
   key: string
-  /** 下载到jupyter工作目录的目标路径 */
-  path: string
+
+  /** 下载至目标路径的目录，也就是当前打开的目录 */
+  dirname: string
+
+  filename: string
   /** 是否下载中 */
   downloading?: boolean
+  sizeStr: string
 }

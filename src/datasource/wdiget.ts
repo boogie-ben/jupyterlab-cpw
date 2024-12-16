@@ -2,9 +2,9 @@ import type { IDefaultFileBrowser } from '@jupyterlab/filebrowser'
 import { LabIcon, SidePanel } from '@jupyterlab/ui-components'
 import { Widget, Panel } from '@lumino/widgets'
 import { renderDatasource } from './core'
-import { KernelManager, type Kernel } from '@jupyterlab/services'
+import { KernelManager, /*  type Kernel, */ SessionManager, type Session } from '@jupyterlab/services'
 import { ref } from 'vue'
-import path from 'path-browserify'
+import { Notification } from '@jupyterlab/apputils'
 
 const Icon = new LabIcon({
   name: 'cpw-datasource:icon',
@@ -18,6 +18,7 @@ window.__DS_DATA = {
 // todo 换成临时秘钥
 
 const envCode = `
+import os
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from qcloud_cos.cos_exception import CosClientError, CosServiceError
@@ -34,64 +35,95 @@ const formatCode = (task: DownloadTask) => `
 client.download_file(
     Bucket='lab-1312184455',
     Key='${task.key}',
-    DestFilePath='${task.path}'
+    DestFilePath=os.path.join(os.getcwd(), '${task.dirname}', '${task.filename}')
 )
 `
 
 class DatasourceWidget extends Widget {
   private _filebrowser: IDefaultFileBrowser
-  private _kernelManager = new KernelManager()
-  private _kernel?: Kernel.IKernelConnection
+  // private _kernelManager = new KernelManager()
+  // private _kernel?: Kernel.IKernelConnection
+  private _sessionManager = new SessionManager({ kernelManager: new KernelManager() })
+  private _sessionConnection?: Session.ISessionConnection
   private _running = false
-  private _pwd = ''
-  // private _queue = [] as { file: string, path }[]
 
-  constructor ({ filebrowser, serverRoot }: { filebrowser: IDefaultFileBrowser, serverRoot: string }) {
+  constructor ({ filebrowser }: { filebrowser: IDefaultFileBrowser }) {
     const node = document.createElement('div')
     node.style.height = '100%'
     node.style.width = '100%'
     super({ node })
     this._filebrowser = filebrowser
     this.id = 'cpw-dataource-wdiget'
-    this._pwd = serverRoot
-    if (this._kernelManager.isReady) this.newKernel()
-    else this._kernelManager.ready.then(() => this.newKernel())
+    // if (this._kernelManager.isReady) this.newSession()
+    // else this._kernelManager.ready.then(() => this.newSession())
+    if (this._sessionManager.isReady) this.newSession()
+    else this._sessionManager.ready.then(() => this.newSession())
     window.addEventListener('datasource-add-task', this)
     renderDatasource(node)
     console.log(this)
+    window.addEventListener('beforeunload', () => {
+      if (this._sessionConnection) {
+        this._sessionConnection.shutdown()
+        this._sessionConnection.dispose()
+      }
+    })
   }
 
-  async newKernel () {
-    this._kernel = await this._kernelManager.startNew({ name: 'python' })
-    const future = this._kernel.requestExecute({ code: envCode })
+  async newSession () {
+    console.log('new')
+    this._sessionConnection = await this._sessionManager.startNew({
+      kernel: { name: 'python' },
+      name: 'cpw-datasource-session',
+      type: '',
+      path: 'cpw-datasource',
+    })
+    const future = this._sessionConnection!.kernel!.requestExecute({ code: envCode })
     await future.done
     future.dispose()
     this._running = false
   }
 
-  addTask (key: string, filename: string) {
-    const downloadPath = path.join(this._pwd, this._filebrowser.model.path, filename)
-    window.__DS_DATA.queue.value.push({ key, path: downloadPath })
+  addTask (file: DataFile) {
+    const { key, filename, size_str } = file
+    window.__DS_DATA.queue.value.push({
+      key,
+      dirname: this._filebrowser.model.path,
+      sizeStr: size_str,
+      filename,
+    })
     if (!this._running) this.download()
   }
 
   async download () {
+    this._running = true
     // 避免用户在内核管理里面把内核关掉了, 确保创建新的
-    if (!this._kernel || this._kernel.isDisposed) await this.newKernel()
+    if (
+      !this._sessionConnection ||
+      this._sessionConnection.isDisposed ||
+      !this._sessionConnection.kernel ||
+      this._sessionConnection.kernel!.isDisposed
+    ) await this.newSession()
     const task = window.__DS_DATA.queue.value[0]
     if (!task) {
       this._running = false
       return
     }
-    this._running = true
     task.downloading = true
     const code = formatCode(task)
-    const future = this._kernel!.requestExecute({ code })
+    const future = this._sessionConnection!.kernel!.requestExecute({ code })
+    let error = false
     future.onIOPub = msg => {
-      // todo 失败提醒
-      if (msg.header.msg_type === 'error') console.log('下载失败')
+      // console.log(msg)
+      if (msg.header.msg_type === 'error') {
+        Notification.error(`文件 "${task.filename}" 下载失败`)
+        error = true
+      }
     }
     await future.done
+    if (!error) {
+      Notification.success(`文件 "${task.filename}" 下载成功`)
+      this._filebrowser.model.refresh()
+    }
     future.dispose()
     task.downloading = false
     window.__DS_DATA.queue.value.splice(0, 1)
@@ -99,13 +131,13 @@ class DatasourceWidget extends Widget {
     else this._running = false
   }
 
-  handleEvent (e: CustomEvent<{ key: string, filename: string }>) {
-    this.addTask(e.detail.key, e.detail.filename)
+  handleEvent (e: CustomEvent<DataFile>) {
+    this.addTask(e.detail)
   }
 }
 
 export class DatasourcePanel extends SidePanel {
-  constructor (options: { filebrowser: IDefaultFileBrowser, serverRoot: string }) {
+  constructor (options: { filebrowser: IDefaultFileBrowser }) {
     const panel = new Panel()
     panel.id = 'cpw-dataource-panel'
     panel.node.style.height = '100%'

@@ -7,7 +7,7 @@
     width="84%"
     top="8vh"
     :dialog-style="{ height: '80vh', border: 'none', overflow: 'hidden' }"
-    dialog-class-name="full-content-dialog cpw-cell-editor-dialog"
+    dialog-class-name="full-content-dialog"
     :header="modeLabel[mode]"
     :confirm-btn="{ content: '保存', onClick: comfirm, loading }"
     destroy-on-close

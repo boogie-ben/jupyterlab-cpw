@@ -1,4 +1,5 @@
 import { request } from '../../request'
+import { formatBytes } from './utils'
 import path from 'path-browserify'
 
 export const reqDatasources = () =>
@@ -12,7 +13,8 @@ export const reqDatasources = () =>
             filename: path.basename(key),
             path: path.dirname(key),
             size: file.size,
-            type: file.size,
+            size_str: formatBytes(file.size),
+            type: file.type,
           }
         })
       })

@@ -112,19 +112,16 @@ const datasourcePlugin: JupyterFrontEndPlugin<void> = {
   id: 'cpw-datasource:plugin',
   description: 'Datasource Categories',
   autoStart: true,
-  requires: [ILabShell, IDefaultFileBrowser, JupyterFrontEnd.IPaths],
+  requires: [ILabShell, IDefaultFileBrowser, ILayoutRestorer],
   activate (
     app: JupyterFrontEnd,
     shell: ILabShell,
     filebrowser: IDefaultFileBrowser,
-    paths: JupyterFrontEnd.IPaths,
+    restorer: ILayoutRestorer,
   ) {
-    // console.log(app.)
-    shell.add(
-      new DatasourcePanel({ filebrowser, serverRoot: paths.directories.serverRoot }),
-      'left',
-      { type: '数据集' },
-    )
+    const ds = new DatasourcePanel({ filebrowser })
+    shell.add(ds, 'left', { type: '数据集' })
+    if (restorer) restorer.add(ds, 'cpw-ds:plugin')
   },
 }
 

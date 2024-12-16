@@ -495,8 +495,7 @@
   display: flex;
   align-items: center;
   column-gap: 4px;
-  height: 44px;
-  padding: 0 8px;
+  padding: 6px 8px;
   font-size: 1.3em;
   font-weight: 600;
 }
@@ -509,21 +508,16 @@
   border-top: 1px solid var(--jp-toolbar-border-color);
 }
 
-.ds-cate,
-.ds-file {
-  height: 33px;
-  line-height: 32px;
-  /* margin-bottom: 1px; */
-  border-bottom: 1px solid var(--dnd-item-border-color);
-  cursor: pointer;
-}
-
 .ds-cate {
   display: flex;
   align-items: center;
   column-gap: 4px;
-  padding: 0 8px 0 4px;
+  padding: 4px 4px 4px 8px;
   background-color: var(--dnd-category-bg-color);
+  font-size: 1.077em;
+  line-height: 2em;
+  border-bottom: 1px solid var(--dnd-item-border-color);
+  cursor: pointer;
 }
 
 .ds-cate .ds-cate-icon {
@@ -548,8 +542,9 @@
   display: flex;
   align-items: center;
   column-gap: 4px;
-  padding: 0 8px 0 24px;
+  padding: 4px 4px 4px 28px;
   background-color: var(--dnd-component-bg-color);
+  border-bottom: 1px solid var(--dnd-item-border-color);
 }
 
 .ds-file-label {
