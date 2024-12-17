@@ -24,7 +24,7 @@ from qcloud_cos import CosS3Client
 from qcloud_cos.cos_exception import CosClientError, CosServiceError
 
 config = CosConfig(
-    Region='ap-singapore',
+    Region='ap-guangzhou',
     SecretId='IKIDSjndIyb3MTP8pGVZS9fz60iGcmmaBZEn',
     SecretKey='Xr22qdKuQn01rUu495omaCbprjO0QfhW',
 )
@@ -33,7 +33,7 @@ client = CosS3Client(config)
 
 const formatCode = (task: DownloadTask) => `
 client.download_file(
-    Bucket='lab-1312184455',
+    Bucket='lab-data-1312184455',
     Key='${task.key}',
     DestFilePath=os.path.join(os.getcwd(), '${task.dirname}', '${task.filename}')
 )

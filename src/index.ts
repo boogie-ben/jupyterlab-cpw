@@ -32,7 +32,7 @@ function activate (
   const tracker = new WidgetTracker<CPWDocumentWidget>({ namespace: 'cpw' })
 
   const obcb = () => {
-    console.log(document.body.getAttribute('data-jp-theme-light'))
+    // console.log(document.body.getAttribute('data-jp-theme-light'))
     if (JSON.parse(document.body.getAttribute('data-jp-theme-light') || 'true')) {
       document.documentElement.removeAttribute('theme-mode')
     } else {
@@ -120,7 +120,7 @@ const datasourcePlugin: JupyterFrontEndPlugin<void> = {
     restorer: ILayoutRestorer,
   ) {
     const ds = new DatasourcePanel({ filebrowser })
-    shell.add(ds, 'left', { type: '数据集' })
+    shell.add(ds, 'right', { type: '数据集', rank: 1001 }) // 1001比扩展管理器多1，放在它下面
     if (restorer) restorer.add(ds, 'cpw-ds:plugin')
   },
 }

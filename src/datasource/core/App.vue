@@ -16,6 +16,7 @@
         shape="square"
         variant="text"
         :theme="queue.length ? 'success' : 'default'"
+        title="查看下载队列"
         @click="visible = true"
       >
         <template #icon><ArrowUpDown1Icon /></template>
@@ -83,6 +84,7 @@
           row-key="key"
           :data="queue"
           height="100%"
+          size="small"
           :columns="(columns as any)"
         >
           <template #actions="{ rowIndex }">
