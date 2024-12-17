@@ -78,7 +78,7 @@
 /* eslint-disable no-throw-literal */
 import { computed, getCurrentInstance, onMounted, ref, shallowRef, useTemplateRef } from 'vue'
 import { dispatchAction, btnIcons, type ToolbarBtn } from './utils'
-import { wrapRunnerCode, getRunnerCellsToTarget } from './cellHandlers'
+import { wrapRunnerCode, getRunnerCellsToTarget, cellValidator } from './cellHandlers'
 import type { Kernel } from '@jupyterlab/services'
 import type { Graph, Cell } from '@antv/x6'
 import { initGraph, getContextMenuPosition, contextMenuItemHeight, contextMenuItemWidth, type ContextMenuItem, portConfig } from './Graph'
@@ -281,18 +281,28 @@ const copyCell = (target: string | Cell) => {
 const run = (type: CPW.RunType, id?: string) => {
   if (kernelStatus.value !== 'idle') return showErrorMessage('运行失败', '内核非空闲状态')
 
-  let runnerCells: CPW.RunnerCell[] = []
+  let runnerCells: CPW.RunnerCell[] | null = []
   if (type === 'all') {
     // 分析所有
   } else if (type === 'to-current' && id) {
     // 分析所有至当前节点
     const node = getCell(id)
+    // 会对组件路径所有节点进行cellValidator吗，若校验失败则会返回null
     runnerCells = getRunnerCellsToTarget(graph, node)
   } else if (type === 'single' && id) {
     // 运行当前节点
     const node = getCell(id)
-    runnerCells = [{ id: node.id, level: 0, code: wrapRunnerCode(node.getData<CPW.Cell>()) }]
+    const nodeData = node.getData<CPW.Cell>()
+    // cellValidator校验节点
+    if (cellValidator(nodeData)) runnerCells = [{ id: node.id, level: 0, code: wrapRunnerCode(nodeData) }]
+    else runnerCells = null
   }
+
+  if (!runnerCells) { // 如果是null，表示要执行的组件有校验失败的
+    MessagePlugin.error('运行失败，请补充运行组件必填的参数和输入')
+    return
+  }
+
   runnerCells.forEach(({ id }) => updateCellData(id, { status: 'waiting' }))
   dispatchAction(props.id, { type: 'run', data: { cells: runnerCells } })
 }

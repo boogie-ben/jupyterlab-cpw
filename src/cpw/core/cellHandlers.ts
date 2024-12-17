@@ -1,5 +1,6 @@
 import type { Graph, Cell } from '@antv/x6'
 import { cloneFnJSON } from '@vueuse/core'
+import { paramValidator } from './Cfg/utils'
 
 // * ------------- 组件输入、参数处理 --------------------
 export const formatCellParams = (configs: CPW.CellParamConfig[]): CPW.CellParam[] => {
@@ -44,13 +45,22 @@ export const isLegalPythonIdentifier = (name: string) => {
 }
 
 // * ----------- 流水线运行解析 ----------
+export const cellValidator = ({ id, params, incomes }: CPW.Cell) => {
+  const pass = incomes.every(ic => ic.required ? ic.value : true) && params.every(pc => paramValidator(pc))
+  if (!pass) window.dispatchEvent(new CustomEvent(`cpw-cell-error-${id}`, { detail: true }))
+  return pass
+}
+
 const getIncomNode = (graph: Graph, node: Cell) => {
   return (graph.getIncomingEdges(node) || []).map(e => e.getSourceNode()!)
 }
 
 // todo，条件分支
-export const getRunnerCellsToTarget = (graph: Graph, node: Cell): CPW.RunnerCell[] => {
+export const getRunnerCellsToTarget = (graph: Graph, node: Cell): CPW.RunnerCell[] | null => {
+  let hasErr = false
   const nodeData = node.getData<CPW.Cell>()
+
+  if (!cellValidator(nodeData)) hasErr = true
 
   const runnerCells = [{ id: node.id, level: 0, code: wrapRunnerCode(nodeData) }]
 
@@ -58,6 +68,7 @@ export const getRunnerCellsToTarget = (graph: Graph, node: Cell): CPW.RunnerCell
     const incomNodes = getIncomNode(graph, currNode)
     incomNodes.forEach(pNode => {
       const data = pNode.getData<CPW.Cell>()
+      if (!cellValidator(data)) hasErr = true
       runnerCells.push({ id: pNode.id, level: currLevel + 1, code: wrapRunnerCode(data) })
       deep(pNode, currLevel + 1)
     })
@@ -67,7 +78,7 @@ export const getRunnerCellsToTarget = (graph: Graph, node: Cell): CPW.RunnerCell
 
   runnerCells.sort((a, b) => b.level - a.level)
 
-  return runnerCells
+  return hasErr ? null : runnerCells
 }
 
 const pid = (id: string) => id.replace(/-/g, '_')

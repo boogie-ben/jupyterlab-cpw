@@ -1,5 +1,5 @@
 <template>
-  <div :class="['cpw-cell-node', data.active && 'cpw-cell-node-active']">
+  <div :class="['cpw-cell-node', data.active && 'cpw-cell-node-active', isErr && 'cpw-cell-node-error']">
     <div
       class="cpw-node-name"
       :title="data.name"
@@ -15,9 +15,9 @@
 </template>
 
 <script lang="ts" setup>
-import type { Node } from '@antv/x6'
+import { Node } from '@antv/x6'
 import { statusIcon } from './index'
-import { inject, reactive } from 'vue'
+import { inject, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 
 const getNode: any = inject('getNode')
 
@@ -45,6 +45,17 @@ const data = reactive<CPW.Cell>({
 
 node.setData({ ...data })
 
-node.on('change:data', ({ current }) => Object.assign(data, current))
+node.on('change:data', ({ current }) => {
+  isErr.value = false
+  Object.assign(data, current)
+})
+
+const isErr = ref(false) // 独立状态标记组件在运行前的校验中是否失败
+const setErr = (e: CustomEvent<boolean>) => {
+  isErr.value = e.detail
+}
+onMounted(() => { window.addEventListener<any>(`cpw-cell-error-${node.id}`, setErr) })
+
+onBeforeUnmount(() => window.removeEventListener<any>(`cpw-cell-error-${node.id}`, setErr))
 
 </script>
