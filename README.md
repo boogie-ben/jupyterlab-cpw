@@ -1,5 +1,25 @@
 # jupyterlab_cpw
 
+开发build
+```shell
+pnpm run build
+```
+生产build
+```shell
+pnpm run build:prod
+```
+dev
+```shell
+pnpm run watch #比较慢
+```
+打python包
+```shell
+pip install build # 如果没有装过build的话，需要先安装
+python -m build
+```
+产物在dist/目录下
+-------------
+
 [![Github Actions Status](https://github.com/boogie-ben/jupyterlab-cpw/workflows/Build/badge.svg)](https://github.com/boogie-ben/jupyterlab-cpw/actions/workflows/build.yml)
 
 A JupyterLab extension. Enable Canvas Pipeline Workflow.

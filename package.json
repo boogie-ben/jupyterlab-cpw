@@ -45,7 +45,8 @@
         "dev-proxy": "node ./dev-proxy.js",
         "watch": "run-p watch:src watch:labextension",
         "watch:src": "vite build --watch --mode=dev",
-        "watch:labextension": "jupyter labextension watch --development True ."
+        "watch:labextension": "jupyter labextension watch --development True .",
+        "release": "coding-generic -u=gc_yezhibin@ieggtc.com --path=\"./dist/jupyterlab_cpw-0.1.0-py3-none-any.whl\" --registry=\"https://ptc-generic.pkg.coding.intlgame.com/lab/plugins/chunks/jupyterlab_cpw-0.1.0-py3-none-any.whl\""
     },
     "dependencies": {
         "@antv/algorithm": "^0.1.26",
@@ -92,6 +93,7 @@
         "@vue/eslint-config-standard": "^8.0.1",
         "@vue/eslint-config-typescript": "^14.1.4",
         "@vue/tsconfig": "^0.6.0",
+        "coding-generic": "^1.2.13",
         "css-loader": "^6.7.1",
         "eslint": "^8.57.1",
         "eslint-plugin-vue": "^9.31.0",

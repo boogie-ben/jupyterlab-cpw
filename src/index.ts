@@ -119,6 +119,7 @@ const datasourcePlugin: JupyterFrontEndPlugin<void> = {
     filebrowser: IDefaultFileBrowser,
     restorer: ILayoutRestorer,
   ) {
+    console.log(app)
     const ds = new DatasourcePanel({ filebrowser })
     shell.add(ds, 'right', { type: '数据集', rank: 1001 }) // 1001比扩展管理器多1，放在它下面
     if (restorer) restorer.add(ds, 'cpw-ds:plugin')

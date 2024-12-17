@@ -9,13 +9,13 @@ import { MessagePlugin } from 'tdesign-vue-next'
  */
 if (!Object.hasOwnProperty.call(window, '__CPW_DATA')) {
   window.__CPW_DATA = {
-    project_id: 123123,
     categories: ref([]),
     categories_loading: ref(false),
 
     bookmark_component_ids: ref([]),
   }
 }
+
 const getBookmark = () => {
   reqBookmarkedComponents()
     .then(data => { window.__CPW_DATA.bookmark_component_ids.value = data })

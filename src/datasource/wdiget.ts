@@ -70,7 +70,7 @@ class DatasourceWidget extends Widget {
   }
 
   async newSession () {
-    console.log('new')
+    // console.log('new')
     this._sessionConnection = await this._sessionManager.startNew({
       kernel: { name: 'python' },
       name: 'cpw-datasource-session',

@@ -1,3 +1,5 @@
+import { isDev } from './config'
+
 // * ----------- 解析cookie ---------------
 // https://github.com/jshttp/cookie/blob/master/src/index.ts
 function startIndex (str: string, index: number, max: number) {
@@ -58,8 +60,6 @@ function parseCookies (str: string): Record<string, string | undefined> {
 
 const XSRF_COOKIE_NAME = 'ZY__Secure-csrftoken'
 const XSRF_HEADER_NAME = 'X-Csrftoken'
-
-const isDev = import.meta.env.MODE === 'dev'
 
 const cookies = parseCookies(document.cookie)
 

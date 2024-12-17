@@ -600,7 +600,6 @@ const comfirm = async () => {
 
   loading.value = true
   try {
-    // todo 读hub的project_id
     await reqCreateComponent(cell)
     visible.value = false
     emit('done', cell)
