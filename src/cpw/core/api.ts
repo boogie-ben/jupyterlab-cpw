@@ -1,9 +1,8 @@
-import { PROJECT_ID } from '../../config'
 import { request } from '../../request'
 
 /** 获取组件目录 */
 export const reqCategories = (): Promise<CPW.CellCategory[]> =>
-  request('/api/component/project_categories/', { params: { project_id: PROJECT_ID } })
+  request('/api/component/project_categories/', { params: { project_id: window.__CPW_PID } })
     .then(data =>
       data.map((cate: any) => {
         const comps = cate.children.map((c: any) => {
@@ -40,7 +39,7 @@ export const reqCreateComponent = (cell: any) => {
     paramsConfig,
     inputConfig: incomesConfig,
     outputConfig: outgosConfig,
-    project_id: PROJECT_ID,
+    project_id: window.__CPW_PID,
   }
   return request('/api/component/', { method: 'POST', body: JSON.stringify(payload) })
 }
@@ -50,14 +49,14 @@ export const reqDelComponent = (id: number) => request(`/api/component/${id}/`, 
 
 /** 已收藏组件id */
 export const reqBookmarkedComponents = () =>
-  request<number[]>('/api/component/project_favorites/', { params: { project_id: PROJECT_ID } })
+  request<number[]>('/api/component/project_favorites/', { params: { project_id: window.__CPW_PID } })
 
 /** 收藏组件 */
 export const reqBookmarkComponent = (id: number) => request(
   '/api/component/add_project_favorites/',
   {
     method: 'POST',
-    body: JSON.stringify({ component_ids: [id], project_id: PROJECT_ID }),
+    body: JSON.stringify({ component_ids: [id], project_id: window.__CPW_PID }),
   },
 )
 
@@ -66,6 +65,6 @@ export const reqUnBookmarkComponent = (id: number) => request(
   '/api/component/remove_project_favorites/',
   {
     method: 'POST',
-    body: JSON.stringify({ component_ids: [id], project_id: PROJECT_ID }),
+    body: JSON.stringify({ component_ids: [id], project_id: window.__CPW_PID }),
   },
 )

@@ -11,6 +11,7 @@ import { ITranslator } from '@jupyterlab/translation'
 import { LabIcon } from '@jupyterlab/ui-components'
 import { DatasourcePanel } from './datasource/wdiget'
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser'
+import { isDev } from './config'
 import 'tdesign-vue-next/es/style/index.css'
 
 const cpwIcon = new LabIcon({
@@ -28,7 +29,15 @@ function activate (
   launcher: ILauncher,
   restorer: ILayoutRestorer,
   translator: ITranslator,
+  paths: JupyterFrontEnd.IPaths,
 ) {
+  // 全局保存project_id
+  const serverPid = parseInt(paths.urls.hubServerName?.replace('project_', '') || '')
+  window.__CPW_PID = isDev ? 1 : (Number.isNaN(serverPid) ? 1 : serverPid)
+
+  console.log('serverPid', serverPid)
+  console.log('__CPW_PID', window.__CPW_PID)
+
   const tracker = new WidgetTracker<CPWDocumentWidget>({ namespace: 'cpw' })
 
   const obcb = () => {
@@ -104,7 +113,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Enable Canvas Pipeline Workflow.',
   autoStart: true,
   // optional: [],
-  requires: [ILauncher, ILayoutRestorer, ITranslator],
+  requires: [ILauncher, ILayoutRestorer, ITranslator, JupyterFrontEnd.IPaths],
   activate,
 }
 
@@ -119,7 +128,6 @@ const datasourcePlugin: JupyterFrontEndPlugin<void> = {
     filebrowser: IDefaultFileBrowser,
     restorer: ILayoutRestorer,
   ) {
-    console.log(app)
     const ds = new DatasourcePanel({ filebrowser })
     shell.add(ds, 'right', { type: '数据集', rank: 1001 }) // 1001比扩展管理器多1，放在它下面
     if (restorer) restorer.add(ds, 'cpw-ds:plugin')

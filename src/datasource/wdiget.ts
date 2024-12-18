@@ -60,7 +60,6 @@ class DatasourceWidget extends Widget {
     else this._sessionManager.ready.then(() => this.newSession())
     window.addEventListener('datasource-add-task', this)
     renderDatasource(node)
-    console.log(this)
     window.addEventListener('beforeunload', () => {
       if (this._sessionConnection) {
         this._sessionConnection.shutdown()

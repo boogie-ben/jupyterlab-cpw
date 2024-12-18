@@ -14,5 +14,5 @@ interface Window {
     queue: import('vue').Ref<DownloadTask[]>
   }
 
-  // __CPW_PID: number
+  __CPW_PID: number
 }
