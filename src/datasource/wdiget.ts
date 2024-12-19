@@ -5,6 +5,7 @@ import { renderDatasource } from './core'
 import { KernelManager, /*  type Kernel, */ SessionManager, type Session } from '@jupyterlab/services'
 import { ref } from 'vue'
 import { Notification } from '@jupyterlab/apputils'
+import { reqCosTmpCredential, type CosTmpCredential } from './core/api'
 
 const Icon = new LabIcon({
   name: 'cpw-datasource:icon',
@@ -22,22 +23,29 @@ import os
 from qcloud_cos import CosConfig
 from qcloud_cos import CosS3Client
 from qcloud_cos.cos_exception import CosClientError, CosServiceError
-
-config = CosConfig(
-    Region='ap-guangzhou',
-    SecretId='IKIDSjndIyb3MTP8pGVZS9fz60iGcmmaBZEn',
-    SecretKey='Xr22qdKuQn01rUu495omaCbprjO0QfhW',
-)
-client = CosS3Client(config)
 `
 
-const formatCode = (task: DownloadTask) => `
-client.download_file(
-    Bucket='lab-data-1312184455',
-    Key='${task.key}',
-    DestFilePath=os.path.join(os.getcwd(), '${task.dirname}', '${task.filename}')
-)
+const formatCode = (task: DownloadTask, cosInfo: CosTmpCredential) => {
+  const { cos, credentials } = cosInfo
+  return `
+def __cpw_datasource_downloader():
+    config = CosConfig(
+        Region='${cos.region}',
+        SecretId='${credentials.tmpSecretId}',
+        SecretKey='${credentials.tmpSecretKey}',
+        Token='${credentials.sessionToken}'
+    )
+
+    client = CosS3Client(config)
+
+    client.download_file(
+        Bucket='${cos.bucket}',
+        Key='${task.key}',
+        DestFilePath=os.path.join(os.getcwd(), '${task.dirname}', '${task.filename}')
+    )
+__cpw_datasource_downloader()
 `
+}
 
 class DatasourceWidget extends Widget {
   private _filebrowser: IDefaultFileBrowser
@@ -108,7 +116,26 @@ class DatasourceWidget extends Widget {
       return
     }
     task.downloading = true
-    const code = formatCode(task)
+    let cosInfo: CosTmpCredential | null = null
+    try {
+      cosInfo = await reqCosTmpCredential(task.key)
+    } catch (err: any) {
+      Notification.error(`文件 "${task.filename}" 下载失败: ${err.message}`)
+    }
+
+    const done = () => {
+      task.downloading = false
+      window.__DS_DATA.queue.value.splice(0, 1)
+      if (window.__DS_DATA.queue.value.length) this.download()
+      else this._running = false
+    }
+
+    if (!cosInfo) {
+      done()
+      return
+    }
+
+    const code = formatCode(task, cosInfo)
     const future = this._sessionConnection!.kernel!.requestExecute({ code })
     let error = false
     future.onIOPub = msg => {
@@ -124,10 +151,7 @@ class DatasourceWidget extends Widget {
       this._filebrowser.model.refresh()
     }
     future.dispose()
-    task.downloading = false
-    window.__DS_DATA.queue.value.splice(0, 1)
-    if (window.__DS_DATA.queue.value.length) this.download()
-    else this._running = false
+    done()
   }
 
   handleEvent (e: CustomEvent<DataFile>) {

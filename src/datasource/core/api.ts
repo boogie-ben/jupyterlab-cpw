@@ -20,3 +20,14 @@ export const reqDatasources = () =>
       })
       return { count, results }
     })
+
+export interface CosTmpCredential {
+  cos: { bucket: string, region: 'ap-singapore' },
+  credentials: { sessionToken: string, tmpSecretId: string, tmpSecretKey: string }
+  expiration: string
+  expiredTime: number
+  startTime: number
+}
+
+export const reqCosTmpCredential = (fileKey: string) =>
+  request<CosTmpCredential>('/api/cos/temp_credential/', { method: 'POST', body: JSON.stringify({ prefix: fileKey }) })
